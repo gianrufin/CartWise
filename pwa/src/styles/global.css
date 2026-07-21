@@ -372,11 +372,71 @@ select {
   resize: vertical;
 }
 
+.field select {
+  min-height: var(--touch-target);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-card);
+  background: rgba(0, 0, 0, 0.18);
+  color: var(--text);
+  padding: 0 var(--space-md);
+  font: var(--font-body);
+}
+
 .field input:focus,
-.field textarea:focus {
+.field textarea:focus,
+.field select:focus {
   outline: none;
   border-color: var(--accent);
   box-shadow: 0 0 0 3px rgba(82, 197, 247, 0.2);
+}
+
+/* Modal / bottom sheet */
+.modal-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  background: rgba(10, 9, 22, 0.55);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.modal-sheet {
+  width: 100%;
+  max-width: 520px;
+  background: #23223a;
+  border: 1px solid var(--glass-border);
+  border-bottom: none;
+  border-radius: var(--radius-sheet) var(--radius-sheet) 0 0;
+  padding: var(--space-xl) var(--space-lg) calc(var(--space-xl) + env(safe-area-inset-bottom));
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  box-shadow: 0 -12px 40px rgba(0, 0, 0, 0.45);
+}
+
+@media (min-width: 900px) {
+  .modal-scrim {
+    align-items: center;
+  }
+  .modal-sheet {
+    border-radius: var(--radius-sheet);
+    border-bottom: 1px solid var(--glass-border);
+  }
+}
+
+.icon-btn {
+  min-width: 40px;
+  min-height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--glass-border);
+  background: var(--glass-bg);
+  color: var(--text);
+  border-radius: 50%;
 }
 
 .field-row {
@@ -391,6 +451,18 @@ select {
 .divider {
   border: none;
   border-top: 1px solid var(--glass-border);
+}
+
+.warn-banner {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  padding: var(--space-md) var(--space-lg);
+  border-radius: var(--radius-card);
+  background: rgba(245, 177, 76, 0.12);
+  border: 1px solid rgba(245, 177, 76, 0.4);
+  color: var(--warning);
+  font: var(--font-body-sm);
 }
 
 .empty-state {
@@ -435,6 +507,12 @@ select {
 
 .topbar h1 {
   font: var(--font-title-lg);
+  flex: 1;
+}
+
+.topbar-actions {
+  display: flex;
+  gap: var(--space-sm);
 }
 
 .fab {

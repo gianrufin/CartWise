@@ -1,27 +1,32 @@
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { EmptyState } from "../components/EmptyState";
-import { mockLists } from "../data/mock";
-import { estimatedTotal, isResolved } from "../data/types";
+import { Icon } from "../components/Icon";
+import { ListFormModal } from "../components/ListFormModal";
+import { useStore } from "../data/store";
+import { estimatedTotal, unresolvedCount } from "../data/types";
 import { formatCurrency } from "../utils/currency";
 
 export function Lists() {
   const navigate = useNavigate();
-
-  if (mockLists.length === 0) {
-    return (
-      <EmptyState
-        icon="clipboard-list"
-        message="Create your first grocery list and start tracking your budget."
-      />
-    );
-  }
+  const { activeLists, createList } = useStore();
+  const [creating, setCreating] = useState(false);
 
   return (
     <div className="screen">
-      <h1 className="screen-title">Lists</h1>
-      {mockLists.map((list) => {
-        const pending = list.items.filter((i) => !isResolved(i)).length;
-        return (
+      <div className="row">
+        <h1 className="screen-title">Lists</h1>
+      </div>
+
+      {activeLists.length === 0 ? (
+        <EmptyState
+          icon="clipboard-list"
+          message="Create your first grocery list and start tracking your budget."
+          actionLabel="New list"
+          onAction={() => setCreating(true)}
+        />
+      ) : (
+        activeLists.map((list) => (
           <div
             key={list.id}
             className="card clickable"
@@ -31,7 +36,7 @@ export function Lists() {
               <div>
                 <div className="amount">{list.name}</div>
                 <div className="muted">
-                  {pending} pending of {list.items.length} items
+                  {unresolvedCount(list.items)} pending of {list.items.length} items
                 </div>
               </div>
               <span className="amount primary-text">
@@ -39,8 +44,23 @@ export function Lists() {
               </span>
             </div>
           </div>
-        );
-      })}
+        ))
+      )}
+
+      <button className="fab" aria-label="Create list" onClick={() => setCreating(true)}>
+        <Icon name="plus" size={26} strokeWidth={2} />
+      </button>
+
+      {creating && (
+        <ListFormModal
+          onClose={() => setCreating(false)}
+          onSubmit={(values) => {
+            const id = createList(values);
+            setCreating(false);
+            navigate(`/list/${id}`);
+          }}
+        />
+      )}
     </div>
   );
 }

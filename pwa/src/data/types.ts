@@ -37,23 +37,29 @@ export interface ListItem {
   status: ItemStatus;
 }
 
+export type ListStatus = "active" | "archived";
+
 export interface ShoppingList {
   id: string;
   name: string;
   description?: string;
   currency: string;
   budgetAmount?: number;
+  status: ListStatus;
+  createdAt: string; // ISO
   items: ListItem[];
 }
 
-export interface CompletedTrip {
+// A completed shopping trip — the unit of spending history.
+export interface Trip {
   id: string;
+  listId: string;
   listName: string;
   currency: string;
   budgetAmount?: number;
   actualTotal: number;
   paymentMethod: PaymentMethod;
-  completedAtLabel: string;
+  completedAt: string; // ISO
   purchasedCount: number;
   unavailableCount: number;
   skippedCount: number;
@@ -91,3 +97,34 @@ export const estimatedTotal = (items: ListItem[]): number =>
   items
     .filter((i) => i.status !== "skipped" && i.status !== "unavailable")
     .reduce((sum, i) => sum + (i.estimatedTotalPrice ?? 0), 0);
+
+export const resolvedCount = (items: ListItem[]): number =>
+  items.filter(isResolved).length;
+
+export const unresolvedCount = (items: ListItem[]): number =>
+  items.filter((i) => !isResolved(i)).length;
+
+// Derive the price the user didn't type from the one they did.
+// Returns whichever fields should be filled/normalised for an item.
+export function derivePrices(input: {
+  quantity: number;
+  unitPrice?: number;
+  totalPrice?: number;
+}): { unitPrice?: number; totalPrice?: number; mismatch: boolean } {
+  const { quantity, unitPrice, totalPrice } = input;
+  const hasUnit = unitPrice != null && !Number.isNaN(unitPrice);
+  const hasTotal = totalPrice != null && !Number.isNaN(totalPrice);
+  const qty = quantity > 0 ? quantity : 1;
+
+  if (hasUnit && hasTotal) {
+    // Both entered — flag a mismatch if they don't reconcile (small epsilon).
+    const expected = unitPrice! * qty;
+    const mismatch = Math.abs(expected - totalPrice!) > 0.01;
+    return { unitPrice, totalPrice, mismatch };
+  }
+  if (hasUnit) return { unitPrice, totalPrice: round2(unitPrice! * qty), mismatch: false };
+  if (hasTotal) return { unitPrice: round2(totalPrice! / qty), totalPrice, mismatch: false };
+  return { unitPrice: undefined, totalPrice: undefined, mismatch: false };
+}
+
+const round2 = (n: number): number => Math.round(n * 100) / 100;

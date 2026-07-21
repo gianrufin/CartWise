@@ -15,24 +15,27 @@ This repository contains:
 | `pwa/` | Full-featured PWA — React + Vite + TypeScript, installable, offline-ready shell |
 | `docs/` | Product blueprint, backend (Supabase) schema plan, shared design tokens |
 
-## Current status — Phase 0: Project Foundation
+## Current status — Phase 1: Local Guest Mode MVP (PWA)
 
-Phase 0 delivers the project skeleton for both platforms, per the build plan in
-[`docs/BLUEPRINT.md`](docs/BLUEPRINT.md):
+Foundations (Phase 0) plus a working local-only guest app in the PWA, per the
+build plan in [`docs/BLUEPRINT.md`](docs/BLUEPRINT.md):
 
 - ✅ Android project (Kotlin + Jetpack Compose + Material 3) with navigation
 - ✅ PWA project (React + Vite + TS) with responsive mobile-first layout
 - ✅ Shared design tokens (`docs/design-tokens.md`, mirrored in both apps)
-- ✅ Placeholder screens: Welcome, Home, List Detail, Add Item, Shopping Mode,
-  Trip Summary, Settings (+ Reports placeholder for bottom navigation)
-- ✅ Local mock data (no backend, no auth yet)
-- ✅ Empty states for lists, reports, and guest sharing
 - ✅ Dark **glassmorphism** design system (deep indigo, frosted glass cards,
-  gradient accents, glowing center nav button)
+  gradient accents, glowing center nav button), minimal line icons, Inter 300 body
 - ✅ **Quick Tally** — a persistent price calculator that stacks grocery
-  amounts into a live running total (item names optional; persists across
-  reloads). Launched from the glowing center nav button.
-- ⬜ Phase 1: Local Guest Mode MVP (next)
+  amounts into a live running total (item names optional; persists across reloads)
+- ✅ **Phase 1 (PWA):** local persistent store (localStorage) with full guest
+  workflow — create/edit/delete lists, add/edit/delete items, budgets &
+  currency, estimated/actual prices with unit↔total calc + mismatch warning,
+  live shopping mode, end-of-trip unresolved-item review, payment method,
+  saved trip history, and a basic monthly spending summary. Sharing is blocked
+  with an account prompt. All calculations (estimated/actual totals, remaining,
+  over-budget, resolved/unresolved) verified end-to-end in a headless browser.
+- ⬜ Phase 1 (Android): port the same workflow onto Room (next)
+- ⬜ Phase 2: Shopping Mode polish (grouping, search/filter, sticky refinements)
 
 ## Running the PWA
 

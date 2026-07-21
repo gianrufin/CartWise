@@ -1,11 +1,17 @@
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Icon } from "../components/Icon";
-import { mockLists, mockTrips, monthSpendingTotal } from "../data/mock";
+import { ListFormModal } from "../components/ListFormModal";
+import { useStore } from "../data/store";
 import { estimatedTotal, PAYMENT_LABELS } from "../data/types";
 import { formatCurrency } from "../utils/currency";
+import { formatDate } from "../utils/date";
 
 export function Home() {
   const navigate = useNavigate();
+  const { activeLists, trips, monthSpendingTotal, createList } = useStore();
+  const [creating, setCreating] = useState(false);
+  const recentTrips = trips.slice(0, 3);
 
   return (
     <div className="screen">
@@ -21,7 +27,7 @@ export function Home() {
         </div>
         <div className="amount-lg">{formatCurrency(monthSpendingTotal, "PHP", true)}</div>
         <div style={{ font: "var(--font-body-sm)", opacity: 0.9 }}>
-          {mockTrips.length} trips completed
+          {trips.length} {trips.length === 1 ? "trip" : "trips"} completed
         </div>
       </div>
 
@@ -45,7 +51,12 @@ export function Home() {
       </div>
 
       <h2 className="section-title">Active lists</h2>
-      {mockLists.map((list) => (
+      {activeLists.length === 0 && (
+        <div className="card">
+          <p className="muted">Create your first grocery list and start tracking your budget.</p>
+        </div>
+      )}
+      {activeLists.map((list) => (
         <div
           key={list.id}
           className="card clickable"
@@ -55,7 +66,7 @@ export function Home() {
             <div>
               <div className="amount">{list.name}</div>
               <div className="muted">
-                {list.items.length} items · budget{" "}
+                {list.items.length} {list.items.length === 1 ? "item" : "items"} · budget{" "}
                 {list.budgetAmount != null
                   ? formatCurrency(list.budgetAmount, list.currency, true)
                   : "—"}
@@ -68,8 +79,8 @@ export function Home() {
         </div>
       ))}
 
-      <h2 className="section-title">Recent trips</h2>
-      {mockTrips.map((trip) => (
+      {recentTrips.length > 0 && <h2 className="section-title">Recent trips</h2>}
+      {recentTrips.map((trip) => (
         <div
           key={trip.id}
           className="card clickable"
@@ -79,7 +90,7 @@ export function Home() {
             <div>
               <div>{trip.listName}</div>
               <div className="muted">
-                {trip.completedAtLabel} · {PAYMENT_LABELS[trip.paymentMethod]}
+                {formatDate(trip.completedAt)} · {PAYMENT_LABELS[trip.paymentMethod]}
               </div>
             </div>
             <span className="amount">
@@ -94,9 +105,20 @@ export function Home() {
         devices.
       </p>
 
-      <button className="fab" aria-label="Create list">
+      <button className="fab" aria-label="Create list" onClick={() => setCreating(true)}>
         <Icon name="plus" size={26} strokeWidth={2} />
       </button>
+
+      {creating && (
+        <ListFormModal
+          onClose={() => setCreating(false)}
+          onSubmit={(values) => {
+            const id = createList(values);
+            setCreating(false);
+            navigate(`/list/${id}`);
+          }}
+        />
+      )}
     </div>
   );
 }
