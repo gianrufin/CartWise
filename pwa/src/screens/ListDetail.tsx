@@ -4,6 +4,7 @@ import { Icon } from "../components/Icon";
 import { ListFormModal } from "../components/ListFormModal";
 import { StatusChip } from "../components/StatusChip";
 import { TopBar } from "../components/TopBar";
+import { useAuth } from "../data/auth";
 import { useStore } from "../data/store";
 import { estimatedTotal } from "../data/types";
 import { formatCurrency } from "../utils/currency";
@@ -11,6 +12,7 @@ import { formatCurrency } from "../utils/currency";
 export function ListDetail() {
   const { listId } = useParams();
   const navigate = useNavigate();
+  const { isGuest } = useAuth();
   const { getList, updateList, deleteList } = useStore();
   const list = getList(listId);
   const [editing, setEditing] = useState(false);
@@ -167,10 +169,13 @@ export function ListDetail() {
       {shareBlocked && (
         <div className="modal-scrim" onClick={() => setShareBlocked(false)}>
           <div className="modal-sheet" onClick={(e) => e.stopPropagation()}>
-            <h2 className="screen-title">Sharing needs an account</h2>
+            <h2 className="screen-title">
+              {isGuest ? "Sharing needs an account" : "Sharing is almost here"}
+            </h2>
             <p className="muted">
-              Create a free account to share this list and sync it across devices.
-              Guest lists stay on this device only.
+              {isGuest
+                ? "Create a free account to share this list and sync it across devices. Guest lists stay on this device only."
+                : "Your lists are on your account. Inviting collaborators and live shared shopping arrive in the next update (Phase 4)."}
             </p>
             <button className="btn btn-primary btn-block" onClick={() => setShareBlocked(false)}>
               Got it

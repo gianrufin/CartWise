@@ -427,6 +427,18 @@ select {
   }
 }
 
+.settings-select {
+  margin-top: var(--space-sm);
+  width: 100%;
+  min-height: var(--touch-target);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-card);
+  background: rgba(0, 0, 0, 0.18);
+  color: var(--text);
+  padding: 0 var(--space-md);
+  font: var(--font-body);
+}
+
 .icon-btn {
   min-width: 40px;
   min-height: 40px;
@@ -463,6 +475,12 @@ select {
   border: 1px solid rgba(245, 177, 76, 0.4);
   color: var(--warning);
   font: var(--font-body-sm);
+}
+
+.warn-banner.danger-banner {
+  background: rgba(248, 113, 113, 0.12);
+  border-color: rgba(248, 113, 113, 0.4);
+  color: var(--danger);
 }
 
 .empty-state {

@@ -36,10 +36,20 @@ build plan in [`docs/BLUEPRINT.md`](docs/BLUEPRINT.md):
   over-budget, resolved/unresolved) verified end-to-end in a headless browser.
 - ✅ **Phase 2 (PWA):** Shopping Mode polish — group by store or category with
   per-group subtotals, item search, a hide-resolved filter, and one-tap
-  purchase that prefills the estimated price. End-of-trip review, payment
-  method, and trip summary carry over from Phase 1.
-- ⬜ Phase 1–2 (Android): port the workflow onto Room (next Android step)
-- ⬜ Phase 3: Authentication and Cloud Data (Supabase)
+  purchase that prefills the estimated price.
+- ✅ **Phase 3 (PWA — account layer):** sign up / sign in / sign out with
+  per-account data isolation, guest→account data migration on signup,
+  profile display name + default currency, and account-gated sharing.
+  Implemented locally (accounts + sessions in this browser) behind an
+  interface ready to swap in Supabase Auth when `VITE_SUPABASE_URL` /
+  `VITE_SUPABASE_ANON_KEY` are set (see `pwa/.env.example`). Verified
+  end-to-end: guest list → signup migrates it → sign out empties the guest
+  namespace → sign back in restores it → wrong password rejected → currency
+  change applies to new lists.
+- ⬜ Phase 3 (cloud): Supabase Auth + Postgres sync adapter (needs project
+  credentials) — the network layer behind the account interface
+- ⬜ Phase 1–3 (Android): port the workflow onto Room + Supabase
+- ⬜ Phase 4: Shared Lists and Live Collaboration
 
 ## Running the PWA
 

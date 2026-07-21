@@ -3,12 +3,14 @@ import { useNavigate } from "react-router-dom";
 import { EmptyState } from "../components/EmptyState";
 import { Icon } from "../components/Icon";
 import { ListFormModal } from "../components/ListFormModal";
+import { useAuth } from "../data/auth";
 import { useStore } from "../data/store";
 import { estimatedTotal, unresolvedCount } from "../data/types";
 import { formatCurrency } from "../utils/currency";
 
 export function Lists() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const { activeLists, createList } = useStore();
   const [creating, setCreating] = useState(false);
 
@@ -53,6 +55,7 @@ export function Lists() {
 
       {creating && (
         <ListFormModal
+          defaultCurrency={user?.defaultCurrency}
           onClose={() => setCreating(false)}
           onSubmit={(values) => {
             const id = createList(values);

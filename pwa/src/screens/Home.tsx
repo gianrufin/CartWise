@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Icon } from "../components/Icon";
 import { ListFormModal } from "../components/ListFormModal";
+import { useAuth } from "../data/auth";
 import { useStore } from "../data/store";
 import { estimatedTotal, PAYMENT_LABELS } from "../data/types";
 import { formatCurrency } from "../utils/currency";
@@ -9,6 +10,7 @@ import { formatDate } from "../utils/date";
 
 export function Home() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const { activeLists, trips, monthSpendingTotal, createList } = useStore();
   const [creating, setCreating] = useState(false);
   const recentTrips = trips.slice(0, 3);
@@ -16,7 +18,7 @@ export function Home() {
   return (
     <div className="screen">
       <div className="greeting">
-        Hey there!
+        {user ? `Hey, ${user.displayName}!` : "Hey there!"}
         <br />
         <span className="muted">What are we buying today?</span>
       </div>
@@ -100,10 +102,12 @@ export function Home() {
         </div>
       ))}
 
-      <p className="muted">
-        You're in guest mode. Create a free account to share lists and sync across
-        devices.
-      </p>
+      {!user && (
+        <p className="muted">
+          You're in guest mode. Create a free account to share lists and sync across
+          devices.
+        </p>
+      )}
 
       <button className="fab" aria-label="Create list" onClick={() => setCreating(true)}>
         <Icon name="plus" size={26} strokeWidth={2} />
@@ -111,6 +115,7 @@ export function Home() {
 
       {creating && (
         <ListFormModal
+          defaultCurrency={user?.defaultCurrency}
           onClose={() => setCreating(false)}
           onSubmit={(values) => {
             const id = createList(values);

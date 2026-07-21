@@ -4,9 +4,11 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
+import { storeKeyFor, useAuth } from "./auth";
 import type {
   ItemStatus,
   ListItem,
@@ -15,12 +17,11 @@ import type {
   Trip,
 } from "./types";
 
-// Phase 1: local guest-mode persistence. All data lives on-device in
-// localStorage — no account, no cloud. Cloud sync + guest→account migration
-// arrive in Phase 3. The shape mirrors docs/backend/schema-plan.sql so the
-// migration is a straight mapping later.
-
-const STORAGE_KEY = "cartwise.store.v1";
+// Local persistence, namespaced per account. Guest data lives under the
+// "guest" namespace; each signed-in account gets its own. On signup the auth
+// layer migrates guest data into the new account (see auth.tsx). Switching
+// accounts reloads the store from that account's namespace. The shape mirrors
+// docs/backend/schema-plan.sql so the Phase 3 cloud sync is a straight mapping.
 
 interface PersistedState {
   lists: ShoppingList[];
@@ -33,9 +34,9 @@ function uid(prefix: string): string {
   return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
 }
 
-function load(): PersistedState {
+function load(key: string): PersistedState {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const raw = localStorage.getItem(key);
     if (!raw) return EMPTY;
     const parsed = JSON.parse(raw) as PersistedState;
     return {
@@ -82,11 +83,22 @@ interface StoreApi {
 const StoreContext = createContext<StoreApi | null>(null);
 
 export function StoreProvider({ children }: { children: ReactNode }) {
-  const [state, setState] = useState<PersistedState>(load);
+  const { user } = useAuth();
+  const key = storeKeyFor(user?.id ?? null);
+  const [state, setState] = useState<PersistedState>(() => load(key));
+  const keyRef = useRef(key);
+
+  // Account switched (sign in/out/up): reload from that account's namespace.
+  useEffect(() => {
+    if (keyRef.current !== key) {
+      keyRef.current = key;
+      setState(load(key));
+    }
+  }, [key]);
 
   useEffect(() => {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      localStorage.setItem(keyRef.current, JSON.stringify(state));
     } catch {
       // Non-fatal: data just won't persist if storage is unavailable.
     }

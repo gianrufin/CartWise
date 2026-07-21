@@ -6,6 +6,7 @@ import { Icon } from "./Icon";
 interface Props {
   // When editing, seed from an existing list; otherwise create.
   list?: ShoppingList;
+  defaultCurrency?: string;
   onClose: () => void;
   onSubmit: (values: {
     name: string;
@@ -16,9 +17,9 @@ interface Props {
   onDelete?: () => void;
 }
 
-export function ListFormModal({ list, onClose, onSubmit, onDelete }: Props) {
+export function ListFormModal({ list, defaultCurrency = "PHP", onClose, onSubmit, onDelete }: Props) {
   const [name, setName] = useState(list?.name ?? "");
-  const [currency, setCurrency] = useState(list?.currency ?? "PHP");
+  const [currency, setCurrency] = useState(list?.currency ?? defaultCurrency);
   const [budget, setBudget] = useState(
     list?.budgetAmount != null ? String(list.budgetAmount) : ""
   );
