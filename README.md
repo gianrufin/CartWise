@@ -71,10 +71,13 @@ build plan in [`docs/BLUEPRINT.md`](docs/BLUEPRINT.md):
   live**: invite→accept, shopper can edit items but not budget, viewer's
   update/insert/delete all blocked by RLS (`42501` / 0 rows), role
   downgrade + member removal enforced. Unit tests 15/15.
-- ⬜ Phase 4 (live collaboration): Supabase Realtime subscriptions so shared
-  edits appear on both screens without refresh, + per-item delta sync
+- ✅ **Phase 4 (live collaboration):** Supabase Realtime subscriptions
+  (JWT-authorized, RLS-scoped) so a collaborator's edits appear without a
+  reload, plus per-item delta sync so simultaneous editors don't clobber each
+  other. **Verified live**: a subscribed collaborator receives an owner's
+  INSERT event end-to-end.
 - ⬜ Phase 1–4 (Android): port the workflow onto Room + Supabase
-- ⬜ Phase 5: Permissions and Privacy
+- ⬜ Phase 5: Permissions and Privacy (private lists, spending visibility)
 
 ## Running the PWA
 
