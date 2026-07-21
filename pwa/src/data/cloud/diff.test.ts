@@ -1,11 +1,21 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import type { ShoppingList, Trip } from "../types";
+import type { ListItem, ShoppingList, Trip } from "../types";
 import { computeSyncOps } from "./diff.ts";
 
 // Run with: node --test --experimental-strip-types src/data/cloud/diff.test.ts
 
-const list = (id: string, name: string, items: ShoppingList["items"] = []): ShoppingList => ({
+const item = (id: string, listId: string, over: Partial<ListItem> = {}): ListItem => ({
+  id,
+  listId,
+  name: id,
+  quantity: 1,
+  priority: "normal",
+  status: "pending",
+  ...over,
+});
+
+const list = (id: string, name: string, items: ListItem[] = []): ShoppingList => ({
   id,
   name,
   currency: "PHP",
@@ -29,35 +39,49 @@ const trip = (id: string): Trip => ({
   carriedOverCount: 0,
 });
 
-test("new list is upserted", () => {
-  const ops = computeSyncOps({ lists: [], trips: [] }, { lists: [list("l1", "A")], trips: [] });
-  assert.equal(ops.upsertLists.length, 1);
-  assert.equal(ops.upsertLists[0].id, "l1");
-  assert.equal(ops.deleteListIds.length, 0);
+test("new list + items upsert list meta and items", () => {
+  const ops = computeSyncOps(
+    { lists: [], trips: [] },
+    { lists: [list("l1", "A", [item("i1", "l1")])], trips: [] }
+  );
+  assert.equal(ops.upsertListMeta.length, 1);
+  assert.equal(ops.upsertItems.length, 1);
+  assert.equal(ops.upsertItems[0].id, "i1");
 });
 
-test("unchanged list produces no ops", () => {
-  const a = list("l1", "A");
-  const ops = computeSyncOps({ lists: [a], trips: [] }, { lists: [a], trips: [] });
-  assert.equal(ops.upsertLists.length, 0);
-  assert.equal(ops.deleteListIds.length, 0);
-});
-
-test("changed list (renamed / new item) is upserted", () => {
-  const before = list("l1", "A");
-  const after = list("l1", "A renamed");
+test("changing one item pushes only that item, not list meta", () => {
+  const before = list("l1", "A", [item("i1", "l1"), item("i2", "l1")]);
+  const after = list("l1", "A", [item("i1", "l1", { status: "purchased" }), item("i2", "l1")]);
   const ops = computeSyncOps({ lists: [before], trips: [] }, { lists: [after], trips: [] });
-  assert.equal(ops.upsertLists.length, 1);
-  assert.equal(ops.upsertLists[0].name, "A renamed");
+  assert.equal(ops.upsertListMeta.length, 0, "list meta unchanged");
+  assert.equal(ops.upsertItems.length, 1, "only the edited item");
+  assert.equal(ops.upsertItems[0].id, "i1");
+  assert.equal(ops.upsertItems[0].status, "purchased");
 });
 
-test("removed list is deleted", () => {
-  const ops = computeSyncOps({ lists: [list("l1", "A")], trips: [] }, { lists: [], trips: [] });
+test("renaming the list pushes meta but not unchanged items", () => {
+  const before = list("l1", "A", [item("i1", "l1")]);
+  const after = list("l1", "A renamed", [item("i1", "l1")]);
+  const ops = computeSyncOps({ lists: [before], trips: [] }, { lists: [after], trips: [] });
+  assert.equal(ops.upsertListMeta.length, 1);
+  assert.equal(ops.upsertItems.length, 0);
+});
+
+test("removing an item queues an item delete", () => {
+  const before = list("l1", "A", [item("i1", "l1"), item("i2", "l1")]);
+  const after = list("l1", "A", [item("i1", "l1")]);
+  const ops = computeSyncOps({ lists: [before], trips: [] }, { lists: [after], trips: [] });
+  assert.deepEqual(ops.deleteItemIds, ["i2"]);
+});
+
+test("deleting a whole list queues list delete, not per-item deletes", () => {
+  const before = list("l1", "A", [item("i1", "l1")]);
+  const ops = computeSyncOps({ lists: [before], trips: [] }, { lists: [], trips: [] });
   assert.deepEqual(ops.deleteListIds, ["l1"]);
-  assert.equal(ops.upsertLists.length, 0);
+  assert.equal(ops.deleteItemIds.length, 0, "list delete cascades items");
 });
 
-test("new trip is inserted, existing trip is not", () => {
+test("new trip is inserted once", () => {
   const ops = computeSyncOps(
     { lists: [], trips: [trip("t1")] },
     { lists: [], trips: [trip("t2"), trip("t1")] }

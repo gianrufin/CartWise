@@ -1,4 +1,4 @@
-import type { PaymentMethod, ShoppingList, Trip } from "../types";
+import type { ListItem, PaymentMethod, ShoppingList, Trip } from "../types";
 import { getSupabase } from "./client";
 import {
   itemToRow,
@@ -71,9 +71,8 @@ export async function pullState(userId: string): Promise<CloudState> {
   return { lists, trips };
 }
 
-// Upsert a list and replace its items (simple full-replace sync for the MVP).
-// For a shared list the caller doesn't own, only the items are pushed — the
-// list row (name/budget) is owner-only, and RLS would reject it anyway.
+// Full-replace push of a list (used only for guest→cloud migration, where the
+// account starts empty so there's nothing to clobber).
 export async function pushList(list: ShoppingList, userId: string): Promise<void> {
   const sb = getSupabase();
   if (!sb) return;
@@ -86,6 +85,29 @@ export async function pushList(list: ShoppingList, userId: string): Promise<void
   if (list.items.length > 0) {
     await sb.from("list_items").insert(list.items.map(itemToRow));
   }
+}
+
+// --- Granular delta sync (per-item), used for live editing ---
+
+// Upsert a list's metadata row only. Owner-only; members can't change it.
+export async function pushListMeta(list: ShoppingList, userId: string): Promise<void> {
+  const sb = getSupabase();
+  if (!sb) return;
+  const isOwner = !list.ownerUserId || list.ownerUserId === userId;
+  if (!isOwner) return;
+  await sb.from("shopping_lists").upsert(listToRow(list, userId));
+}
+
+export async function upsertItems(items: ListItem[]): Promise<void> {
+  const sb = getSupabase();
+  if (!sb || items.length === 0) return;
+  await sb.from("list_items").upsert(items.map(itemToRow));
+}
+
+export async function deleteItems(ids: string[]): Promise<void> {
+  const sb = getSupabase();
+  if (!sb || ids.length === 0) return;
+  await sb.from("list_items").delete().in("id", ids);
 }
 
 export async function deleteList(listId: string): Promise<void> {

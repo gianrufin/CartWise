@@ -149,25 +149,54 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     }
   }, [state]);
 
-  // Cloud mode: push deltas (changed/removed lists, new trips) to Supabase.
+  // Cloud mode: push per-item deltas to Supabase.
   useEffect(() => {
     if (!cloudUserId || cloudSyncedRef.current === null) return;
     const ops = computeSyncOps(cloudSyncedRef.current, state);
-    if (ops.upsertLists.length === 0 && ops.deleteListIds.length === 0 && ops.insertTrips.length === 0) {
-      return;
-    }
+    const empty =
+      ops.upsertListMeta.length === 0 &&
+      ops.deleteListIds.length === 0 &&
+      ops.upsertItems.length === 0 &&
+      ops.deleteItemIds.length === 0 &&
+      ops.insertTrips.length === 0;
+    if (empty) return;
     cloudSyncedRef.current = state;
     (async () => {
       try {
-        const { deleteList, pushList, pushTrip } = await import("./cloud/sync");
-        await Promise.all(ops.upsertLists.map((l) => pushList(l, cloudUserId)));
-        await Promise.all(ops.deleteListIds.map((id) => deleteList(id)));
-        for (const t of ops.insertTrips) await pushTrip(t, t.paymentMethod, cloudUserId);
+        const sync = await import("./cloud/sync");
+        await Promise.all(ops.upsertListMeta.map((l) => sync.pushListMeta(l, cloudUserId)));
+        await Promise.all(ops.deleteListIds.map((id) => sync.deleteList(id)));
+        await sync.upsertItems(ops.upsertItems);
+        await sync.deleteItems(ops.deleteItemIds);
+        for (const t of ops.insertTrips) await sync.pushTrip(t, t.paymentMethod, cloudUserId);
       } catch (err) {
         console.warn("Cloud push failed; will retry on next change.", err);
       }
     })();
   }, [state, cloudUserId]);
+
+  // Live collaboration: subscribe to Realtime changes and re-pull (debounced)
+  // when a collaborator edits a shared list. RLS scopes events to the caller.
+  useEffect(() => {
+    if (!cloudUserId) return;
+    let cancelled = false;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    let unsub = () => {};
+    (async () => {
+      const { subscribeShared } = await import("./cloud/realtime");
+      const cleanup = await subscribeShared(() => {
+        clearTimeout(timer);
+        timer = setTimeout(() => setRefreshNonce((n) => n + 1), 700);
+      });
+      if (cancelled) cleanup();
+      else unsub = cleanup;
+    })();
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+      unsub();
+    };
+  }, [cloudUserId]);
 
   const getList = useCallback(
     (id: string | undefined) => state.lists.find((l) => l.id === id),
