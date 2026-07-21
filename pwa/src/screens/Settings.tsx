@@ -26,8 +26,8 @@ export function Settings() {
             <button
               className="btn btn-outline btn-block"
               style={{ marginTop: "var(--space-md)" }}
-              onClick={() => {
-                signOut();
+              onClick={async () => {
+                await signOut();
                 navigate("/");
               }}
             >

@@ -57,6 +57,37 @@ export async function cloudSignOut(): Promise<void> {
   await sb.auth.signOut();
 }
 
+export async function cloudUpdateProfile(patch: {
+  displayName?: string;
+  defaultCurrency?: string;
+}): Promise<void> {
+  const sb = getSupabase();
+  if (!sb) return;
+  // Keep auth metadata and the users_profile row in step.
+  await sb.auth.updateUser({
+    data: {
+      ...(patch.displayName !== undefined ? { display_name: patch.displayName } : {}),
+      ...(patch.defaultCurrency !== undefined ? { default_currency: patch.defaultCurrency } : {}),
+    },
+  });
+  const { data } = await sb.auth.getUser();
+  if (data.user) {
+    await sb.from("users_profile").update({
+      ...(patch.displayName !== undefined ? { display_name: patch.displayName } : {}),
+      ...(patch.defaultCurrency !== undefined ? { default_currency: patch.defaultCurrency } : {}),
+    }).eq("id", data.user.id);
+  }
+}
+
+// Returns whether a live session exists right now (used to detect the
+// "email confirmation required" case after signUp).
+export async function cloudHasSession(): Promise<boolean> {
+  const sb = getSupabase();
+  if (!sb) return false;
+  const { data } = await sb.auth.getSession();
+  return Boolean(data.session);
+}
+
 export async function cloudCurrentUser(): Promise<User | null> {
   const sb = getSupabase();
   if (!sb) return null;

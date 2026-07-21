@@ -17,18 +17,22 @@ export function AuthModal({ initialMode = "signin", onClose, onSuccess }: Props)
   const [password, setPassword] = useState("");
   const [displayName, setDisplayName] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
 
-  const submit = () => {
+  const submit = async () => {
     setError(null);
+    setBusy(true);
     try {
       if (mode === "signup") {
-        signUp({ email, password, displayName });
+        await signUp({ email, password, displayName });
       } else {
-        signIn({ email, password });
+        await signIn({ email, password });
       }
       onSuccess?.();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Something went wrong.");
+    } finally {
+      setBusy(false);
     }
   };
 
@@ -93,10 +97,10 @@ export function AuthModal({ initialMode = "signin", onClose, onSuccess }: Props)
 
         <button
           className="btn btn-primary btn-block"
-          disabled={!email.trim() || !password}
+          disabled={!email.trim() || !password || busy}
           onClick={submit}
         >
-          {mode === "signup" ? "Create account" : "Sign in"}
+          {busy ? "Please wait…" : mode === "signup" ? "Create account" : "Sign in"}
         </button>
 
         <button

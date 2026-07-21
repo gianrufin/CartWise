@@ -1,43 +1,51 @@
 import {
-  createContext,
+  Suspense,
+  lazy,
   useCallback,
-  useContext,
   useEffect,
   useMemo,
   useState,
   type ReactNode,
 } from "react";
+import { AuthContext, type AuthApi, type User, storeKeyFor } from "./authContext";
+import { isCloudConfigured } from "./config";
 
 // Phase 3 — accounts and sessions.
 //
-// This is a LOCAL auth implementation: accounts and the active session live in
-// localStorage so the whole signup / signin / migration flow is real and
-// testable offline. It is deliberately behind a small interface so a Supabase
-// Auth backend can replace it when VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY
-// are configured (see docs + .env.example). No password is ever sent anywhere;
-// the cloud path will delegate credentials to Supabase Auth entirely.
+// Two backends behind one interface (see authContext.ts):
+//  • Local (default): accounts + session in localStorage, so signup / signin /
+//    guest-migration works offline and is fully testable.
+//  • Supabase (when VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY are set):
+//    real cloud auth, lazy-loaded so supabase-js never ships to local builds.
+// The backend is chosen once at load from isCloudConfigured.
+
+export { useAuth, storeKeyFor } from "./authContext";
+export type { User, AuthApi } from "./authContext";
 
 const ACCOUNTS_KEY = "cartwise.accounts.v1";
 const SESSION_KEY = "cartwise.session.v1";
-const STORE_PREFIX = "cartwise.store.";
 
-export function storeKeyFor(userId: string | null): string {
-  return `${STORE_PREFIX}${userId ?? "guest"}.v1`;
+const CloudAuthProvider = lazy(() => import("./cloud/CloudAuthProvider"));
+
+export function AuthProvider({ children }: { children: ReactNode }) {
+  if (isCloudConfigured) {
+    return (
+      <Suspense fallback={null}>
+        <CloudAuthProvider>{children}</CloudAuthProvider>
+      </Suspense>
+    );
+  }
+  return <LocalAuthProvider>{children}</LocalAuthProvider>;
 }
 
-export interface User {
-  id: string;
-  email: string;
-  displayName: string;
-  defaultCurrency: string;
-}
+/* ============================================================ local backend */
 
 interface StoredAccount extends User {
   passwordHash: string;
 }
 
 // Local-only, non-cryptographic hash. NOT security — it exists so the local
-// demo can distinguish a right vs. wrong password. Real credential handling is
+// demo can tell a right vs. wrong password apart. Real credential handling is
 // delegated to Supabase Auth in the cloud backend.
 function hashPassword(pw: string): string {
   let h = 5381;
@@ -64,18 +72,7 @@ function migrateGuestData(userId: string) {
   }
 }
 
-interface AuthApi {
-  user: User | null;
-  isGuest: boolean;
-  signUp: (input: { email: string; password: string; displayName?: string }) => void;
-  signIn: (input: { email: string; password: string }) => void;
-  signOut: () => void;
-  updateProfile: (patch: Partial<Pick<User, "displayName" | "defaultCurrency">>) => void;
-}
-
-const AuthContext = createContext<AuthApi | null>(null);
-
-export function AuthProvider({ children }: { children: ReactNode }) {
+function LocalAuthProvider({ children }: { children: ReactNode }) {
   const [accounts, setAccounts] = useState<StoredAccount[]>(loadAccounts);
   const [userId, setUserId] = useState<string | null>(
     () => localStorage.getItem(SESSION_KEY)
@@ -91,7 +88,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [userId]);
 
   const signUp = useCallback(
-    ({ email, password, displayName }: { email: string; password: string; displayName?: string }) => {
+    async ({ email, password, displayName }: { email: string; password: string; displayName?: string }) => {
       const normalized = email.trim().toLowerCase();
       if (!normalized || !password) throw new Error("Email and password are required.");
       if (accounts.some((a) => a.email === normalized))
@@ -112,7 +109,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 
   const signIn = useCallback(
-    ({ email, password }: { email: string; password: string }) => {
+    async ({ email, password }: { email: string; password: string }) => {
       const normalized = email.trim().toLowerCase();
       const account = accounts.find((a) => a.email === normalized);
       if (!account || account.passwordHash !== hashPassword(password))
@@ -122,10 +119,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [accounts]
   );
 
-  const signOut = useCallback(() => setUserId(null), []);
+  const signOut = useCallback(async () => setUserId(null), []);
 
   const updateProfile = useCallback(
-    (patch: Partial<Pick<User, "displayName" | "defaultCurrency">>) => {
+    async (patch: Partial<Pick<User, "displayName" | "defaultCurrency">>) => {
       if (!userId) return;
       setAccounts((prev) => prev.map((a) => (a.id === userId ? { ...a, ...patch } : a)));
     },
@@ -142,14 +139,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           defaultCurrency: account.defaultCurrency,
         }
       : null;
-    return { user, isGuest: user === null, signUp, signIn, signOut, updateProfile };
+    return { user, isGuest: user === null, loading: false, signUp, signIn, signOut, updateProfile };
   }, [accounts, userId, signUp, signIn, signOut, updateProfile]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
-}
-
-export function useAuth(): AuthApi {
-  const ctx = useContext(AuthContext);
-  if (!ctx) throw new Error("useAuth must be used within an AuthProvider");
-  return ctx;
 }
