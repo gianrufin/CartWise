@@ -1,0 +1,84 @@
+# CartWise
+
+**Plan together, shop live, and stay within budget.**
+
+CartWise is an Android-first grocery planning, live shopping, and household spending
+tracker. Users create grocery lists, set budgets, add item prices, shop with a live
+running total, and collaborate with other people in real time. Initial launch market
+is the Philippines (PHP-first, multi-currency capable).
+
+This repository contains:
+
+| Path | What it is |
+| --- | --- |
+| `android/` | Native Android app — Kotlin, Jetpack Compose, Material 3 |
+| `pwa/` | Full-featured PWA — React + Vite + TypeScript, installable, offline-ready shell |
+| `docs/` | Product blueprint, backend (Supabase) schema plan, shared design tokens |
+
+## Current status — Phase 0: Project Foundation
+
+Phase 0 delivers the project skeleton for both platforms, per the build plan in
+[`docs/BLUEPRINT.md`](docs/BLUEPRINT.md):
+
+- ✅ Android project (Kotlin + Jetpack Compose + Material 3) with navigation
+- ✅ PWA project (React + Vite + TS) with responsive mobile-first layout
+- ✅ Shared design tokens (`docs/design-tokens.md`, mirrored in both apps)
+- ✅ Placeholder screens: Welcome, Home, List Detail, Add Item, Shopping Mode,
+  Trip Summary, Settings (+ Reports placeholder for bottom navigation)
+- ✅ Local mock data (no backend, no auth yet)
+- ✅ Empty states for lists, reports, and guest sharing
+- ⬜ Phase 1: Local Guest Mode MVP (next)
+
+## Running the PWA
+
+```bash
+cd pwa
+npm install
+npm run dev      # dev server
+npm run build    # production build (outputs to pwa/dist)
+```
+
+The PWA is installable (web manifest + service worker) and uses the same screen
+set and mock data as the Android app. Mobile gets bottom navigation; desktop gets
+a sidebar layout.
+
+## Running the Android app
+
+Open `android/` in Android Studio (Ladybug or newer) and run the `app`
+configuration, or from the command line with an Android SDK installed:
+
+```bash
+cd android
+gradle wrapper   # one-time: generates gradlew (wrapper is not committed yet)
+./gradlew assembleDebug
+```
+
+Requires JDK 17+ and Android SDK 35. `minSdk` is 26. Android Studio will offer
+to generate the Gradle wrapper automatically when the project is first opened.
+
+## Build phases
+
+Development follows the phased plan in `docs/BLUEPRINT.md`:
+
+0. **Foundation** *(this phase)* — structure, tokens, navigation, mock data
+1. Local Guest Mode MVP — local lists, budgets, prices, shopping mode, trip history
+2. Shopping Mode Polish
+3. Authentication and Cloud Data (Supabase)
+4. Shared Lists and Live Collaboration
+5. Permissions and Privacy
+6. Multiple Lists, Stores, and Groups
+7. Spending Tracker and Basic Reports
+8. Subscription System (Google Play Billing)
+9. Export
+10. Item Requests and Family Workflow
+11. Optional Item Photos
+12. Price History and Smart Suggestions
+
+## Product rules that shape the code
+
+- Shared access requires an account; guests get local-only lists.
+- Subscription unlocks features; **permissions** control actions inside a list.
+- Only *purchased* items count as actual spending; estimates are planning-only.
+- Private lists and spending are protected at the backend (RLS), never just the UI.
+- Never store card numbers or payment credentials — payment *method* + amount only.
+- Android and PWA share the same backend, rules, and data model.
