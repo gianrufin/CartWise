@@ -64,8 +64,17 @@ build plan in [`docs/BLUEPRINT.md`](docs/BLUEPRINT.md):
   logic unit-tested (`npm test`, 10/10). Local path re-verified (no regression).
 - ⬜ Phase 3 (polish): in-app cross-device E2E on a real browser, offline
   write queue + conflict handling
-- ⬜ Phase 1–3 (Android): port the workflow onto Room + Supabase
-- ⬜ Phase 4: Shared Lists and Live Collaboration
+- ✅ **Phase 4 (shared lists + roles):** `list_members` + `invitations` with
+  role-based RLS (viewer/contributor/shopper/owner), invite links, an
+  accept-invite RPC, member management, and the free-tier 1-collaborator limit.
+  UI gates actions by role; cloud sync pulls owned + shared lists. **Verified
+  live**: invite→accept, shopper can edit items but not budget, viewer's
+  update/insert/delete all blocked by RLS (`42501` / 0 rows), role
+  downgrade + member removal enforced. Unit tests 15/15.
+- ⬜ Phase 4 (live collaboration): Supabase Realtime subscriptions so shared
+  edits appear on both screens without refresh, + per-item delta sync
+- ⬜ Phase 1–4 (Android): port the workflow onto Room + Supabase
+- ⬜ Phase 5: Permissions and Privacy
 
 ## Running the PWA
 
