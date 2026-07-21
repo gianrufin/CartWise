@@ -64,12 +64,12 @@ export function AppNav({ variant }: { variant: "bottom" | "sidebar" }) {
       {leftTabs.map(tab)}
       <NavLink
         to="/tally"
+        aria-label="Quick Tally"
         className={({ isActive }) => `nav-center ${isActive ? "active" : ""}`}
       >
         <span className="fab-circle">
           <Icon name="calculator" size={26} strokeWidth={1.9} />
         </span>
-        <span>Tally</span>
       </NavLink>
       {rightTabs.map(tab)}
     </nav>

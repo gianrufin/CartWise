@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 
 // Quick Tally — a persistent running calculator for stacking grocery prices.
-// Item names are optional; the point is fast price entry with a live total.
-// State persists to localStorage so the tally survives reloads and app restarts.
+// Item names are optional; the point is fast price entry with a live total and
+// an optional budget. State persists to localStorage so the tally survives
+// reloads and app restarts.
 
 export interface TallyEntry {
   id: string;
@@ -10,51 +11,70 @@ export interface TallyEntry {
   name?: string;
 }
 
+interface TallyData {
+  entries: TallyEntry[];
+  budget?: number;
+}
+
 const STORAGE_KEY = "cartwise.tally.v1";
 
-function load(): TallyEntry[] {
+function load(): TallyData {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return [];
+    if (!raw) return { entries: [] };
     const parsed = JSON.parse(raw);
-    if (!Array.isArray(parsed)) return [];
-    return parsed.filter(
-      (e): e is TallyEntry => e && typeof e.amount === "number"
-    );
+    // Legacy format was a bare entries array — migrate it.
+    if (Array.isArray(parsed)) {
+      return { entries: parsed.filter((e) => e && typeof e.amount === "number") };
+    }
+    return {
+      entries: Array.isArray(parsed.entries)
+        ? parsed.entries.filter((e: unknown): e is TallyEntry =>
+            !!e && typeof (e as TallyEntry).amount === "number"
+          )
+        : [],
+      budget: typeof parsed.budget === "number" ? parsed.budget : undefined,
+    };
   } catch {
-    return [];
+    return { entries: [] };
   }
 }
 
 export function useTally() {
-  const [entries, setEntries] = useState<TallyEntry[]>(load);
+  const [data, setData] = useState<TallyData>(load);
 
   useEffect(() => {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
     } catch {
       // Non-fatal: the tally just won't persist if storage is unavailable.
     }
-  }, [entries]);
+  }, [data]);
 
   const add = (amount: number, name?: string) => {
     const trimmed = name?.trim();
-    setEntries((prev) => [
-      ...prev,
-      {
-        id: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
-        amount,
-        name: trimmed ? trimmed : undefined,
-      },
-    ]);
+    setData((d) => ({
+      ...d,
+      entries: [
+        ...d.entries,
+        {
+          id: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+          amount,
+          name: trimmed ? trimmed : undefined,
+        },
+      ],
+    }));
   };
 
   const remove = (id: string) =>
-    setEntries((prev) => prev.filter((e) => e.id !== id));
+    setData((d) => ({ ...d, entries: d.entries.filter((e) => e.id !== id) }));
 
-  const clear = () => setEntries([]);
+  const clear = () => setData((d) => ({ ...d, entries: [] }));
 
-  const total = entries.reduce((sum, e) => sum + e.amount, 0);
+  const setBudget = (budget: number | undefined) =>
+    setData((d) => ({ ...d, budget }));
 
-  return { entries, add, remove, clear, total };
+  const total = data.entries.reduce((sum, e) => sum + e.amount, 0);
+
+  return { entries: data.entries, budget: data.budget, add, remove, clear, setBudget, total };
 }

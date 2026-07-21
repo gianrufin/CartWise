@@ -737,35 +737,62 @@ select {
 .tally {
   display: flex;
   flex-direction: column;
-  min-height: 100%;
+  height: 100%;
 }
 
 .tally-total {
-  margin: var(--space-lg);
-  padding: var(--space-xl);
+  margin: var(--space-md) var(--space-lg) 0;
+  padding: var(--space-lg);
   border-radius: var(--radius-sheet);
-  background: var(--accent-cyan-grad);
-  color: #06222e;
-  box-shadow: 0 14px 34px rgba(42, 168, 238, 0.4);
-  text-align: center;
+  box-shadow: 0 10px 26px rgba(42, 168, 238, 0.3);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  flex: 0 0 auto;
 }
 
 .tally-total .total-value {
-  font: 700 40px/44px var(--font-family);
+  font: 700 34px/38px var(--font-family);
   letter-spacing: -0.5px;
 }
 
 .tally-total .total-meta {
   font: var(--font-body-sm);
+}
+
+.tally-budget-btn {
+  flex: 0 0 auto;
+  border: 1.5px solid;
+  background: transparent;
+  border-radius: var(--radius-pill);
+  padding: 6px 14px;
+  font: var(--font-body-sm);
+  font-weight: 600;
+  opacity: 0.9;
+}
+
+.tally-progress {
+  height: 8px;
+  border-radius: var(--radius-pill);
+  background: rgba(0, 0, 0, 0.18);
+  overflow: hidden;
+}
+
+.tally-progress-fill {
+  height: 100%;
+  border-radius: var(--radius-pill);
   opacity: 0.85;
+  transition: width 0.2s ease;
 }
 
 .tally-tape {
-  flex: 1;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
   gap: var(--space-sm);
-  padding: 0 var(--space-lg);
+  padding: var(--space-md) var(--space-lg) 0;
 }
 
 .tape-row {
@@ -822,64 +849,50 @@ select {
   background: rgba(248, 113, 113, 0.12);
 }
 
-.tally-entry {
-  position: sticky;
-  bottom: 0;
-  margin-top: var(--space-md);
-  padding: var(--space-lg);
-  background: rgba(30, 29, 48, 0.72);
-  backdrop-filter: blur(var(--glass-blur));
-  -webkit-backdrop-filter: blur(var(--glass-blur));
+/* On-screen keypad entry — no native keyboard for prices. */
+.tally-pad {
+  flex: 0 0 auto;
+  padding: var(--space-md) var(--space-lg) var(--space-md);
   border-top: 1px solid var(--glass-border);
+  background: rgba(30, 29, 48, 0.55);
   display: flex;
   flex-direction: column;
-  gap: var(--space-md);
+  gap: var(--space-sm);
 }
 
-.tally-entry .entry-inputs {
+.pad-entry-row {
   display: flex;
-  gap: var(--space-md);
+  gap: var(--space-sm);
 }
 
-.tally-entry .price-input {
+.pad-amount {
   flex: 1;
   min-width: 0;
   min-height: 56px;
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-card);
   background: rgba(0, 0, 0, 0.22);
   color: var(--text);
   padding: 0 var(--space-lg);
-  font: 700 24px/1 var(--font-family);
+  font: 700 26px/1 var(--font-family);
+  overflow: hidden;
 }
 
-.tally-entry .price-input:focus {
-  outline: none;
-  border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgba(82, 197, 247, 0.2);
+.pad-amount .cur {
+  color: var(--text-muted);
+  font-weight: 600;
 }
 
-.tally-entry .name-input {
-  min-height: var(--touch-target);
-  border: 1px solid var(--glass-border);
-  border-radius: var(--radius-card);
-  background: rgba(0, 0, 0, 0.18);
-  color: var(--text);
-  padding: 0 var(--space-lg);
-  font: var(--font-body);
-}
-
-.tally-entry .name-input::placeholder {
+.pad-amount .ph {
   color: var(--text-faint);
 }
 
-.tally-entry .name-input:focus {
-  outline: none;
-  border-color: var(--accent);
-}
-
-.tally-entry .add-btn {
-  min-width: 64px;
+.pad-add {
+  flex: 0 0 auto;
+  width: 68px;
   min-height: 56px;
   display: flex;
   align-items: center;
@@ -888,23 +901,65 @@ select {
   border-radius: var(--radius-card);
   background: var(--accent-cyan-grad);
   color: #06222e;
-  box-shadow: 0 8px 20px rgba(42, 168, 238, 0.4);
+  box-shadow: 0 6px 16px rgba(42, 168, 238, 0.4);
 }
 
-.tally-entry .entry-actions {
+.pad-add:disabled {
+  opacity: 0.5;
+  box-shadow: none;
+}
+
+.pad-name {
+  min-height: 44px;
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-card);
+  background: rgba(0, 0, 0, 0.18);
+  color: var(--text);
+  padding: 0 var(--space-lg);
+  font: var(--font-body);
+}
+
+.pad-name::placeholder {
+  color: var(--text-faint);
+}
+
+.pad-name:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.keypad {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-sm);
+}
+
+.keypad .key {
+  min-height: 52px;
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  justify-content: center;
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-card);
+  background: var(--glass-bg-strong);
+  color: var(--text);
+  font: 600 22px/1 var(--font-family);
 }
 
-.tally-entry .link-btn {
+.keypad .key:active {
+  background: var(--glass-bg);
+  transform: scale(0.97);
+}
+
+.tally-pad .link-btn {
+  align-self: center;
   border: none;
   background: transparent;
   color: var(--text-muted);
   font: var(--font-body-sm);
-  padding: var(--space-sm);
+  padding: 6px var(--space-md);
 }
 
-.tally-entry .link-btn.danger {
+.tally-pad .link-btn.danger {
   color: var(--danger);
 }

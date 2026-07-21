@@ -91,10 +91,16 @@ running total shown large at the top; an editable "tape" lists every entry.
 
 - **Item names are optional** — the feature is price-first; unnamed entries show
   as "Item".
-- **Persistent** — entries and total survive app reloads/restarts (localStorage
-  on web; `rememberSaveable` now on Android, Room in Phase 1).
+- **On-screen keypad** — prices are entered with an in-app numeric keypad, so
+  the device keyboard never pops up while stacking prices (the optional name
+  field still uses the normal keyboard when tapped).
+- **Optional budget** — set a target for the tally; the total card colorises as
+  you approach it (amber ≥85%, red once over) using the system warning palette,
+  with a progress bar and "₱X left" / "over by ₱Y".
+- **Persistent** — entries, total, and budget survive app reloads/restarts
+  (localStorage on web; `rememberSaveable` now on Android, Room in Phase 1).
 - Reachable from the glowing **center button** in the bottom nav on every main
-  screen, and from a shortcut card on Home.
+  screen (unlabelled, action-button style), and from a shortcut card on Home.
 - Guest-friendly and offline (no account needed). Future phases can link a tally
   into a list/trip and carry entries into item prices.
 
