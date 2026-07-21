@@ -34,8 +34,12 @@ build plan in [`docs/BLUEPRINT.md`](docs/BLUEPRINT.md):
   saved trip history, and a basic monthly spending summary. Sharing is blocked
   with an account prompt. All calculations (estimated/actual totals, remaining,
   over-budget, resolved/unresolved) verified end-to-end in a headless browser.
-- ⬜ Phase 1 (Android): port the same workflow onto Room (next)
-- ⬜ Phase 2: Shopping Mode polish (grouping, search/filter, sticky refinements)
+- ✅ **Phase 2 (PWA):** Shopping Mode polish — group by store or category with
+  per-group subtotals, item search, a hide-resolved filter, and one-tap
+  purchase that prefills the estimated price. End-of-trip review, payment
+  method, and trip summary carry over from Phase 1.
+- ⬜ Phase 1–2 (Android): port the workflow onto Room (next Android step)
+- ⬜ Phase 3: Authentication and Cloud Data (Supabase)
 
 ## Running the PWA
 

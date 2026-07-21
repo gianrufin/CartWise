@@ -1,10 +1,14 @@
+import { useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { Icon } from "../components/Icon";
+import { Segmented } from "../components/Segmented";
 import { StatusChip } from "../components/StatusChip";
 import { TopBar } from "../components/TopBar";
 import { useStore } from "../data/store";
-import type { ItemStatus } from "../data/types";
-import { actualTotal, resolvedCount, unresolvedCount } from "../data/types";
+import type { ItemStatus, ListItem } from "../data/types";
+import { actualTotal, isResolved, resolvedCount, unresolvedCount } from "../data/types";
 import { formatCurrency } from "../utils/currency";
+import { groupItems, type GroupBy } from "../utils/group";
 
 const statusActions: { status: ItemStatus; label: string }[] = [
   { status: "purchased", label: "Purchased" },
@@ -15,14 +19,34 @@ const statusActions: { status: ItemStatus; label: string }[] = [
 
 /**
  * Shopping Mode — the most important experience in the app.
- * Reads/writes the live list in the local store, so status changes and price
- * entry persist immediately (and survive a reload mid-trip).
+ * Reads/writes the live list in the local store (changes persist mid-trip),
+ * with grouping by store/category, search, a hide-resolved filter, per-group
+ * subtotals, and one-tap purchase that prefills the estimated price.
  */
 export function ShoppingMode() {
   const { listId } = useParams();
   const navigate = useNavigate();
   const { getList, updateItem } = useStore();
   const list = getList(listId);
+
+  const [groupBy, setGroupBy] = useState<GroupBy>("category");
+  const [query, setQuery] = useState("");
+  const [hideResolved, setHideResolved] = useState(false);
+
+  const items = list?.items ?? [];
+  const cartTotal = actualTotal(items);
+  const resolved = resolvedCount(items);
+  const unresolved = unresolvedCount(items);
+
+  const groups = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    const filtered = items.filter((it) => {
+      if (hideResolved && isResolved(it)) return false;
+      if (q && !it.name.toLowerCase().includes(q)) return false;
+      return true;
+    });
+    return groupItems(filtered, groupBy);
+  }, [items, query, hideResolved, groupBy]);
 
   if (!list) {
     return (
@@ -35,16 +59,24 @@ export function ShoppingMode() {
     );
   }
 
-  const items = list.items;
-  const cartTotal = actualTotal(items);
-  const resolved = resolvedCount(items);
-  const unresolved = unresolvedCount(items);
-
   const budget = list.budgetAmount;
   const remaining = (budget ?? 0) - cartTotal;
   const overBudget = budget != null && remaining < 0;
   const nearBudget = budget != null && !overBudget && budget > 0 && cartTotal >= budget * 0.85;
   const remainingClass = overBudget ? "danger-text" : nearBudget ? "warning-text" : "primary-text";
+
+  // Toggling a status; marking purchased with no actual price prefills the
+  // estimate so totals move with a single tap.
+  const setStatus = (item: ListItem, status: ItemStatus) => {
+    const next = item.status === status ? "pending" : status;
+    const patch: Partial<ListItem> = { status: next };
+    if (next === "purchased" && item.actualTotalPrice == null && item.estimatedTotalPrice != null) {
+      patch.actualTotalPrice = item.estimatedTotalPrice;
+    }
+    updateItem(list.id, item.id, patch);
+  };
+
+  const visibleCount = groups.reduce((n, g) => n + g.items.length, 0);
 
   return (
     <div>
@@ -74,51 +106,108 @@ export function ShoppingMode() {
         </div>
       </div>
 
+      <div className="toolbar">
+        <div className="search-field">
+          <Icon name="cart" size={18} />
+          <input
+            placeholder="Search items"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            aria-label="Search items"
+          />
+          {query && (
+            <button
+              className="icon-btn"
+              style={{ minWidth: 32, minHeight: 32, border: "none", background: "transparent" }}
+              onClick={() => setQuery("")}
+              aria-label="Clear search"
+            >
+              <Icon name="close" size={16} />
+            </button>
+          )}
+        </div>
+        <div className="toolbar-row">
+          <Segmented<GroupBy>
+            ariaLabel="Group items by"
+            value={groupBy}
+            onChange={setGroupBy}
+            options={[
+              { value: "category", label: "Category" },
+              { value: "store", label: "Store" },
+              { value: "none", label: "None" },
+            ]}
+          />
+          <button
+            className={`filter-toggle ${hideResolved ? "on" : ""}`}
+            onClick={() => setHideResolved((v) => !v)}
+          >
+            Hide resolved
+          </button>
+        </div>
+      </div>
+
       <div className="screen">
-        {items.map((item) => (
-          <div key={item.id} className="card" style={{ display: "grid", gap: "var(--space-sm)" }}>
-            <div className="row">
-              <div>
-                <div className="amount">{item.name}</div>
-                <div className="muted">
-                  {item.quantity}
-                  {item.unit ? ` ${item.unit}` : ""}
-                  {item.store ? ` · ${item.store}` : ""} · est.{" "}
-                  {item.estimatedTotalPrice != null
-                    ? formatCurrency(item.estimatedTotalPrice, list.currency, true)
-                    : "—"}
-                </div>
-                {item.notes && <div className="muted">{item.notes}</div>}
+        {visibleCount === 0 && (
+          <p className="muted" style={{ padding: "var(--space-lg)", textAlign: "center" }}>
+            {items.length === 0 ? "This list has no items." : "No items match your filters."}
+          </p>
+        )}
+        {groups.map((group) => (
+          <div key={group.key}>
+            {group.label && (
+              <div className="group-header">
+                <span className="group-name">{group.label}</span>
+                <span className="group-total">
+                  {group.actual > 0
+                    ? `${formatCurrency(group.actual, list.currency, true)} spent`
+                    : `est. ${formatCurrency(group.estimated, list.currency, true)}`}
+                </span>
               </div>
-              <StatusChip status={item.status} />
-            </div>
-            <div className="field">
-              <label htmlFor={`price-${item.id}`}>Actual price ({symbol(list.currency)})</label>
-              <input
-                id={`price-${item.id}`}
-                inputMode="decimal"
-                value={item.actualTotalPrice ?? ""}
-                onChange={(e) => {
-                  const v = parseFloat(e.target.value);
-                  updateItem(list.id, item.id, {
-                    actualTotalPrice: Number.isNaN(v) ? undefined : v,
-                  });
-                }}
-              />
-            </div>
-            <div className="shopping-actions">
-              {statusActions.map((action) => (
-                <button
-                  key={action.status}
-                  className={`chip ${item.status === action.status ? "selected" : ""}`}
-                  onClick={() =>
-                    updateItem(list.id, item.id, {
-                      status: item.status === action.status ? "pending" : action.status,
-                    })
-                  }
-                >
-                  {action.label}
-                </button>
+            )}
+            <div style={{ display: "grid", gap: "var(--space-md)" }}>
+              {group.items.map((item) => (
+                <div key={item.id} className="card" style={{ display: "grid", gap: "var(--space-sm)" }}>
+                  <div className="row">
+                    <div>
+                      <div className="amount">{item.name}</div>
+                      <div className="muted">
+                        {item.quantity}
+                        {item.unit ? ` ${item.unit}` : ""}
+                        {groupBy !== "store" && item.store ? ` · ${item.store}` : ""} · est.{" "}
+                        {item.estimatedTotalPrice != null
+                          ? formatCurrency(item.estimatedTotalPrice, list.currency, true)
+                          : "—"}
+                      </div>
+                      {item.notes && <div className="muted">{item.notes}</div>}
+                    </div>
+                    <StatusChip status={item.status} />
+                  </div>
+                  <div className="field">
+                    <label htmlFor={`price-${item.id}`}>Actual price ({symbol(list.currency)})</label>
+                    <input
+                      id={`price-${item.id}`}
+                      inputMode="decimal"
+                      value={item.actualTotalPrice ?? ""}
+                      onChange={(e) => {
+                        const v = parseFloat(e.target.value);
+                        updateItem(list.id, item.id, {
+                          actualTotalPrice: Number.isNaN(v) ? undefined : v,
+                        });
+                      }}
+                    />
+                  </div>
+                  <div className="shopping-actions">
+                    {statusActions.map((action) => (
+                      <button
+                        key={action.status}
+                        className={`chip ${item.status === action.status ? "selected" : ""}`}
+                        onClick={() => setStatus(item, action.status)}
+                      >
+                        {action.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
               ))}
             </div>
           </div>

@@ -580,6 +580,108 @@ select {
   gap: var(--space-sm);
 }
 
+/* Shopping-mode toolbar: search + grouping + filter */
+.toolbar {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  padding: var(--space-md) var(--space-lg) 0;
+}
+
+.search-field {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: 0 var(--space-md);
+  min-height: var(--touch-target);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-pill);
+  background: rgba(0, 0, 0, 0.18);
+  color: var(--text-muted);
+}
+
+.search-field input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  background: transparent;
+  color: var(--text);
+  font: var(--font-body);
+  padding: 0;
+}
+
+.search-field input:focus {
+  outline: none;
+}
+
+.toolbar-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  flex-wrap: wrap;
+}
+
+.segmented {
+  display: inline-flex;
+  padding: 3px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--glass-border);
+  background: rgba(0, 0, 0, 0.18);
+}
+
+.segmented button {
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  font: var(--font-body-sm);
+  padding: 6px 14px;
+  border-radius: var(--radius-pill);
+  min-height: 34px;
+}
+
+.segmented button.selected {
+  background: var(--glass-bg-strong);
+  color: var(--text);
+  font-weight: 600;
+}
+
+.group-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-md);
+  margin: var(--space-md) 0 var(--space-sm);
+}
+
+.group-header .group-name {
+  font: var(--font-title);
+}
+
+.group-header .group-total {
+  font: var(--font-body-sm);
+  color: var(--text-muted);
+}
+
+.filter-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 34px;
+  padding: 0 var(--space-md);
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--glass-border);
+  background: var(--glass-bg);
+  color: var(--text-muted);
+  font: var(--font-body-sm);
+}
+
+.filter-toggle.on {
+  border-color: var(--accent);
+  color: var(--text);
+  background: var(--glass-bg-strong);
+}
+
 .shopping-footer {
   position: sticky;
   bottom: 0;
