@@ -46,8 +46,14 @@ build plan in [`docs/BLUEPRINT.md`](docs/BLUEPRINT.md):
   end-to-end: guest list → signup migrates it → sign out empties the guest
   namespace → sign back in restores it → wrong password rejected → currency
   change applies to new lists.
-- ⬜ Phase 3 (cloud): Supabase Auth + Postgres sync adapter (needs project
-  credentials) — the network layer behind the account interface
+- ✅ **Phase 3 (cloud scaffolding):** runnable Supabase SQL migration
+  (`supabase/migrations/0001_initial_schema.sql`) with tables + **Row Level
+  Security** + auto-profile trigger; Supabase client, pure row↔model mappers
+  (unit-tested — `npm test`), a sync adapter, and cloud-auth helpers under
+  `pwa/src/data/cloud/`. All gated behind `isCloudConfigured`, tree-shaken out
+  of the local bundle, and ready to wire once a Supabase project is connected.
+- ⬜ Phase 3 (cloud wiring): point AuthProvider/store at the Supabase adapters
+  and test against a live project (needs credentials)
 - ⬜ Phase 1–3 (Android): port the workflow onto Room + Supabase
 - ⬜ Phase 4: Shared Lists and Live Collaboration
 
