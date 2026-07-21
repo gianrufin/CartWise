@@ -1,4 +1,5 @@
 import { useRef, useState } from "react";
+import { Icon } from "../components/Icon";
 import { TopBar } from "../components/TopBar";
 import { useTally } from "../data/tally";
 import { formatCurrency } from "../utils/currency";
@@ -59,7 +60,7 @@ export function Tally() {
               aria-label="Remove entry"
               onClick={() => remove(entry.id)}
             >
-              ×
+              <Icon name="close" size={18} />
             </button>
           </div>
         ))}
@@ -80,7 +81,7 @@ export function Tally() {
             aria-label="Price"
           />
           <button className="add-btn" onClick={submit} disabled={!canAdd} aria-label="Add price">
-            +
+            <Icon name="plus" size={24} strokeWidth={2.1} />
           </button>
         </div>
         <input

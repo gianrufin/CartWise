@@ -80,9 +80,10 @@ select {
   color: var(--accent);
 }
 
-.bottom-nav .nav-icon {
-  font-size: 21px;
-  line-height: 1;
+.nav-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 /* Center action button — the glowing tally launcher. */
@@ -442,11 +443,13 @@ select {
   bottom: calc(112px + env(safe-area-inset-bottom));
   width: 56px;
   height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   border-radius: var(--radius-sheet);
   border: none;
   background: var(--accent-purple-grad);
   color: #fff;
-  font-size: 26px;
   box-shadow: 0 10px 24px rgba(124, 108, 246, 0.5);
   z-index: 15;
 }
@@ -608,7 +611,9 @@ select {
   border: none;
   background: transparent;
   color: var(--text-faint);
-  font-size: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   min-width: 36px;
   min-height: 36px;
   border-radius: 50%;
@@ -678,11 +683,13 @@ select {
 .tally-entry .add-btn {
   min-width: 64px;
   min-height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   border: none;
   border-radius: var(--radius-card);
   background: var(--accent-cyan-grad);
   color: #06222e;
-  font: 700 22px/1 var(--font-family);
   box-shadow: 0 8px 20px rgba(42, 168, 238, 0.4);
 }
 

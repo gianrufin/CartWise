@@ -53,16 +53,26 @@ Ink on cyan/light gradients is dark (`#06222E`) for contrast.
 
 ## Typography
 
-System font stacks (Roboto on Android, system UI stack on web).
+**Inter** is the type family (bundled locally on web via `@fontsource/inter`
+so the PWA stays offline-capable; Android adopts Inter once the font files are
+added to `res/font`, falling back to Roboto until then). **Body text is Inter
+Light (300)**; headings and labels step up in weight for contrast.
 
 | Token | Size / weight | Use |
 | --- | --- | --- |
-| `display` | 30 / bold | Big totals (cart total, running total) |
-| `title-lg` | 23 / bold | Screen titles, greeting |
-| `title` | 18 / semibold | Card titles, list names |
-| `body` | 16 / regular | Item names, default text |
-| `body-sm` | 14 / regular | Secondary info, prices in rows |
-| `caption` | 12 / medium | Status chips, labels |
+| `display` | 30 / 700 | Big totals (cart total, running total) |
+| `title-lg` | 23 / 600 | Screen titles, greeting |
+| `title` | 18 / 600 | Card titles, list names |
+| `body` | 16 / 300 | Item names, default text |
+| `body-sm` | 14 / 300 | Secondary info, prices in rows |
+| `caption` | 12 / 500 | Status chips, labels |
+
+## Iconography
+
+Minimal **line icons** (Feather / Lucide style: 24px grid, `currentColor`
+stroke, ~1.75 stroke width, round caps) — no emoji. On web they're inlined as
+SVG (`pwa/src/components/Icon.tsx`); on Android they map to Material's outlined
+icon set. Icons inherit text color so they recolor with their context.
 
 ## Spacing & shape
 

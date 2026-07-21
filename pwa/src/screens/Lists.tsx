@@ -10,7 +10,7 @@ export function Lists() {
   if (mockLists.length === 0) {
     return (
       <EmptyState
-        icon="📝"
+        icon="clipboard-list"
         message="Create your first grocery list and start tracking your budget."
       />
     );

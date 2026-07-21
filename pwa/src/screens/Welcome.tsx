@@ -1,4 +1,5 @@
 import { useNavigate } from "react-router-dom";
+import { Icon } from "../components/Icon";
 
 export function Welcome() {
   const navigate = useNavigate();
@@ -7,8 +8,8 @@ export function Welcome() {
 
   return (
     <div className="welcome">
-      <span className="logo" aria-hidden>
-        🛒
+      <span className="logo" style={{ color: "var(--accent)" }}>
+        <Icon name="cart" size={64} strokeWidth={1.5} />
       </span>
       <h1 className="amount-lg">CartWise</h1>
       <p className="muted">Plan together, shop live, and stay within budget.</p>

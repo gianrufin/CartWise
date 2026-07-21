@@ -1,5 +1,7 @@
+import { Icon, type IconName } from "./Icon";
+
 interface Props {
-  icon: string;
+  icon: IconName;
   message: string;
   actionLabel?: string;
   onAction?: () => void;
@@ -8,8 +10,8 @@ interface Props {
 export function EmptyState({ icon, message, actionLabel, onAction }: Props) {
   return (
     <div className="empty-state">
-      <span className="icon" aria-hidden>
-        {icon}
+      <span className="icon">
+        <Icon name={icon} size={48} strokeWidth={1.4} />
       </span>
       <p>{message}</p>
       {actionLabel && onAction && (

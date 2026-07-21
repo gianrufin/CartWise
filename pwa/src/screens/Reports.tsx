@@ -4,7 +4,7 @@ import { EmptyState } from "../components/EmptyState";
 export function Reports() {
   return (
     <EmptyState
-      icon="📊"
+      icon="chart"
       message="Complete a shopping trip to see your spending summary."
     />
   );

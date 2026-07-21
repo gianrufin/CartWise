@@ -1,4 +1,5 @@
 import { useNavigate } from "react-router-dom";
+import { Icon } from "../components/Icon";
 import { mockLists, mockTrips, monthSpendingTotal } from "../data/mock";
 import { estimatedTotal, PAYMENT_LABELS } from "../data/types";
 import { formatCurrency } from "../utils/currency";
@@ -26,17 +27,20 @@ export function Home() {
 
       <div className="card hero cyan clickable" onClick={() => navigate("/tally")}>
         <div className="row">
-          <div>
-            <div className="amount" style={{ color: "#06222e" }}>
-              🧮 Quick Tally
-            </div>
-            <div style={{ font: "var(--font-body-sm)", color: "#06343f" }}>
-              Add prices on the fly — no list needed
+          <div
+            style={{ display: "flex", alignItems: "center", gap: "var(--space-md)", color: "#06222e" }}
+          >
+            <Icon name="calculator" size={28} strokeWidth={1.7} />
+            <div>
+              <div className="amount" style={{ color: "#06222e" }}>
+                Quick Tally
+              </div>
+              <div style={{ font: "var(--font-body-sm)", color: "#06343f" }}>
+                Add prices on the fly — no list needed
+              </div>
             </div>
           </div>
-          <span className="amount" style={{ color: "#06222e" }}>
-            →
-          </span>
+          <Icon name="arrow-right" size={22} style={{ color: "#06222e" }} />
         </div>
       </div>
 
@@ -91,7 +95,7 @@ export function Home() {
       </p>
 
       <button className="fab" aria-label="Create list">
-        +
+        <Icon name="plus" size={26} strokeWidth={2} />
       </button>
     </div>
   );

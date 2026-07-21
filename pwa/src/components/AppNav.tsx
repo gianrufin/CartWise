@@ -1,16 +1,27 @@
 import { NavLink } from "react-router-dom";
+import { Icon, type IconName } from "./Icon";
 
-const leftTabs = [
-  { to: "/home", label: "Home", icon: "🏠" },
-  { to: "/lists", label: "Lists", icon: "🛒" },
+interface Tab {
+  to: string;
+  label: string;
+  icon: IconName;
+}
+
+const leftTabs: Tab[] = [
+  { to: "/home", label: "Home", icon: "home" },
+  { to: "/lists", label: "Lists", icon: "cart" },
 ];
 
-const rightTabs = [
-  { to: "/reports", label: "Reports", icon: "📊" },
-  { to: "/settings", label: "Settings", icon: "⚙️" },
+const rightTabs: Tab[] = [
+  { to: "/reports", label: "Reports", icon: "chart" },
+  { to: "/settings", label: "Settings", icon: "settings" },
 ];
 
-const allTabs = [...leftTabs, { to: "/tally", label: "Tally", icon: "🧮" }, ...rightTabs];
+const allTabs: Tab[] = [
+  ...leftTabs,
+  { to: "/tally", label: "Tally", icon: "calculator" },
+  ...rightTabs,
+];
 
 // Bottom navigation on mobile (with a raised glowing center Quick Tally button),
 // sidebar on desktop (per docs/BLUEPRINT.md).
@@ -19,7 +30,7 @@ export function AppNav({ variant }: { variant: "bottom" | "sidebar" }) {
     return (
       <nav className="sidebar">
         <div className="brand">
-          <span aria-hidden>🛒</span> CartWise
+          <Icon name="cart" size={24} /> CartWise
         </div>
         {allTabs.map((tab) => (
           <NavLink
@@ -29,8 +40,8 @@ export function AppNav({ variant }: { variant: "bottom" | "sidebar" }) {
               `${isActive ? "active" : ""} ${tab.to === "/tally" ? "accent" : ""}`
             }
           >
-            <span className="nav-icon" aria-hidden>
-              {tab.icon}
+            <span className="nav-icon">
+              <Icon name={tab.icon} size={20} />
             </span>
             <span>{tab.label}</span>
           </NavLink>
@@ -39,10 +50,10 @@ export function AppNav({ variant }: { variant: "bottom" | "sidebar" }) {
     );
   }
 
-  const tab = (t: { to: string; label: string; icon: string }) => (
+  const tab = (t: Tab) => (
     <NavLink key={t.to} to={t.to} className={({ isActive }) => (isActive ? "active" : "")}>
-      <span className="nav-icon" aria-hidden>
-        {t.icon}
+      <span className="nav-icon">
+        <Icon name={t.icon} size={21} />
       </span>
       <span>{t.label}</span>
     </NavLink>
@@ -55,8 +66,8 @@ export function AppNav({ variant }: { variant: "bottom" | "sidebar" }) {
         to="/tally"
         className={({ isActive }) => `nav-center ${isActive ? "active" : ""}`}
       >
-        <span className="fab-circle" aria-hidden>
-          🧮
+        <span className="fab-circle">
+          <Icon name="calculator" size={26} strokeWidth={1.9} />
         </span>
         <span>Tally</span>
       </NavLink>

@@ -1,4 +1,5 @@
 import { useNavigate, useParams } from "react-router-dom";
+import { Icon } from "../components/Icon";
 import { StatusChip } from "../components/StatusChip";
 import { TopBar } from "../components/TopBar";
 import { listById } from "../data/mock";
@@ -96,7 +97,7 @@ export function ListDetail() {
         aria-label="Add item"
         onClick={() => navigate(`/list/${list.id}/add-item`)}
       >
-        +
+        <Icon name="plus" size={26} strokeWidth={2} />
       </button>
     </div>
   );
