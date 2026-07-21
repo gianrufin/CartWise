@@ -52,12 +52,18 @@ build plan in [`docs/BLUEPRINT.md`](docs/BLUEPRINT.md):
   (unit-tested — `npm test`), a sync adapter, and cloud-auth helpers under
   `pwa/src/data/cloud/`. All gated behind `isCloudConfigured`, tree-shaken out
   of the local bundle, and ready to wire once a Supabase project is connected.
-- ✅ **Phase 3 (cloud auth wired):** `AuthProvider` uses Supabase Auth when
+- ✅ **Phase 3 (cloud, live):** `AuthProvider` + store use Supabase when
   `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY` are set, else the local
-  backend. The Supabase provider is lazy-loaded, so supabase-js is code-split
-  out of the local/guest bundle. Local path re-verified (no regression).
-- ⬜ Phase 3 (cloud go-live): apply the migration + configure email auth in the
-  Supabase dashboard, then verify the live flow and add cloud data sync
+  backend. Cloud auth (sign up/in/out, profile), per-account data sync
+  (guest→account migration on first login, delta push of lists/trips, pull on
+  login), all supabase-js code-split out of the local/guest bundle
+  (main chunk ~214 kB). **Verified against the live project**: signup +
+  auto-profile trigger, RLS-scoped writes, cross-user isolation (a second user
+  can't read or write another's data — Postgres `42501`), session persistence,
+  and the app mappers round-tripping through the real schema. Diff + mapper
+  logic unit-tested (`npm test`, 10/10). Local path re-verified (no regression).
+- ⬜ Phase 3 (polish): in-app cross-device E2E on a real browser, offline
+  write queue + conflict handling
 - ⬜ Phase 1–3 (Android): port the workflow onto Room + Supabase
 - ⬜ Phase 4: Shared Lists and Live Collaboration
 

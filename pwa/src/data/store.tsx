@@ -9,6 +9,10 @@ import {
   type ReactNode,
 } from "react";
 import { storeKeyFor, useAuth } from "./auth";
+import { isCloudConfigured } from "./config";
+import { computeSyncOps } from "./cloud/diff";
+// NOTE: ./cloud/sync (which pulls in supabase-js) is imported dynamically only
+// when a cloud user is active, so it stays out of the local/guest bundle.
 import type {
   ItemStatus,
   ListItem,
@@ -88,14 +92,51 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<PersistedState>(() => load(key));
   const keyRef = useRef(key);
 
-  // Account switched (sign in/out/up): reload from that account's namespace.
-  useEffect(() => {
-    if (keyRef.current !== key) {
-      keyRef.current = key;
-      setState(load(key));
-    }
-  }, [key]);
+  // Cloud mode: Supabase configured AND a signed-in cloud user.
+  const cloudUserId = isCloudConfigured && user ? user.id : null;
+  // Snapshot the store last mirrored to the cloud, so we only push deltas.
+  // null until the initial cloud pull completes (guards against premature sync).
+  const cloudSyncedRef = useRef<PersistedState | null>(null);
 
+  // Account switched (sign in/out/up): reload that account's data.
+  // For a cloud user, migrate any guest data up, then pull the cloud as source
+  // of truth. Otherwise load the local namespace.
+  useEffect(() => {
+    if (keyRef.current === key) return;
+    keyRef.current = key;
+    cloudSyncedRef.current = null;
+
+    if (!cloudUserId) {
+      setState(load(key));
+      return;
+    }
+
+    let active = true;
+    (async () => {
+      try {
+        const { pullState, pushList, pushTrip } = await import("./cloud/sync");
+        // Migrate local guest data into the account on first cloud login.
+        const guest = load(storeKeyFor(null));
+        if (guest.lists.length > 0 || guest.trips.length > 0) {
+          await Promise.all(guest.lists.map((l) => pushList(l, cloudUserId)));
+          for (const t of guest.trips) await pushTrip(t, t.paymentMethod, cloudUserId);
+          localStorage.removeItem(storeKeyFor(null));
+        }
+        const remote = await pullState(cloudUserId);
+        if (!active) return;
+        cloudSyncedRef.current = remote;
+        setState(remote);
+      } catch (err) {
+        console.warn("Cloud pull failed; using local cache.", err);
+        if (active) setState(load(key));
+      }
+    })();
+    return () => {
+      active = false;
+    };
+  }, [key, cloudUserId]);
+
+  // Persist every change to the local namespace (also a cloud-mode cache).
   useEffect(() => {
     try {
       localStorage.setItem(keyRef.current, JSON.stringify(state));
@@ -103,6 +144,26 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       // Non-fatal: data just won't persist if storage is unavailable.
     }
   }, [state]);
+
+  // Cloud mode: push deltas (changed/removed lists, new trips) to Supabase.
+  useEffect(() => {
+    if (!cloudUserId || cloudSyncedRef.current === null) return;
+    const ops = computeSyncOps(cloudSyncedRef.current, state);
+    if (ops.upsertLists.length === 0 && ops.deleteListIds.length === 0 && ops.insertTrips.length === 0) {
+      return;
+    }
+    cloudSyncedRef.current = state;
+    (async () => {
+      try {
+        const { deleteList, pushList, pushTrip } = await import("./cloud/sync");
+        await Promise.all(ops.upsertLists.map((l) => pushList(l, cloudUserId)));
+        await Promise.all(ops.deleteListIds.map((id) => deleteList(id)));
+        for (const t of ops.insertTrips) await pushTrip(t, t.paymentMethod, cloudUserId);
+      } catch (err) {
+        console.warn("Cloud push failed; will retry on next change.", err);
+      }
+    })();
+  }, [state, cloudUserId]);
 
   const getList = useCallback(
     (id: string | undefined) => state.lists.find((l) => l.id === id),
