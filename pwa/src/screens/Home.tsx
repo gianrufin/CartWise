@@ -8,15 +8,35 @@ export function Home() {
 
   return (
     <div className="screen">
-      <h1 className="screen-title">Home</h1>
+      <div className="greeting">
+        Hey there!
+        <br />
+        <span className="muted">What are we buying today?</span>
+      </div>
 
-      <div className="card highlight">
-        <div className="caption" style={{ color: "inherit" }}>
-          This month
+      <div className="card hero">
+        <div className="caption" style={{ color: "rgba(255,255,255,0.85)" }}>
+          Spent this month
         </div>
         <div className="amount-lg">{formatCurrency(monthSpendingTotal, "PHP", true)}</div>
-        <div style={{ font: "var(--font-body-sm)" }}>
+        <div style={{ font: "var(--font-body-sm)", opacity: 0.9 }}>
           {mockTrips.length} trips completed
+        </div>
+      </div>
+
+      <div className="card hero cyan clickable" onClick={() => navigate("/tally")}>
+        <div className="row">
+          <div>
+            <div className="amount" style={{ color: "#06222e" }}>
+              🧮 Quick Tally
+            </div>
+            <div style={{ font: "var(--font-body-sm)", color: "#06343f" }}>
+              Add prices on the fly — no list needed
+            </div>
+          </div>
+          <span className="amount" style={{ color: "#06222e" }}>
+            →
+          </span>
         </div>
       </div>
 

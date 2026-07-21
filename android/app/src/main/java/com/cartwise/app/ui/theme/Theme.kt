@@ -1,48 +1,39 @@
 package com.cartwise.app.ui.theme
 
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
-import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.Color
 
-private val LightColors = lightColorScheme(
-    primary = PrimaryLight,
-    onPrimary = OnPrimaryLight,
-    primaryContainer = PrimaryContainerLight,
-    onPrimaryContainer = OnPrimaryContainerLight,
-    secondary = SecondaryLight,
-    background = BackgroundLight,
-    surface = SurfaceLight,
-    surfaceVariant = SurfaceVariantLight,
-    onSurface = OnSurfaceLight,
-    onSurfaceVariant = OnSurfaceMutedLight,
-    outline = OutlineLight,
-    error = Danger
-)
+// CartWise uses a single immersive dark glass theme (matches the design
+// direction in docs/design-tokens.md). Gradients and glass translucency are
+// applied per-component; the color scheme here provides the flat fallbacks.
+private val OnCyan = Color(0xFF06222E) // dark ink for text/icons on cyan
 
-private val DarkColors = darkColorScheme(
-    primary = PrimaryDark,
-    onPrimary = OnPrimaryDark,
-    primaryContainer = PrimaryContainerDark,
-    onPrimaryContainer = OnPrimaryContainerDark,
-    secondary = SecondaryDark,
-    background = BackgroundDark,
-    surface = SurfaceDark,
-    surfaceVariant = SurfaceVariantDark,
-    onSurface = OnSurfaceDark,
-    onSurfaceVariant = OnSurfaceMutedDark,
-    outline = OutlineDark,
-    error = Danger
+private val CartWiseColors = darkColorScheme(
+    primary = AccentIndigo,
+    onPrimary = TextPrimary,
+    primaryContainer = AccentIndigo,
+    onPrimaryContainer = TextPrimary,
+    secondary = AccentCyan,
+    onSecondary = OnCyan,
+    background = BgBase,
+    onBackground = TextPrimary,
+    surface = BgElevated,
+    onSurface = TextPrimary,
+    surfaceVariant = GlassSurfaceStrong,
+    onSurfaceVariant = TextMuted,
+    outline = GlassBorder,
+    error = Danger,
+    onError = TextPrimary
 )
 
 @Composable
 fun CartWiseTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
     content: @Composable () -> Unit
 ) {
     MaterialTheme(
-        colorScheme = if (darkTheme) DarkColors else LightColors,
+        colorScheme = CartWiseColors,
         typography = CartWiseTypography,
         content = content
     )

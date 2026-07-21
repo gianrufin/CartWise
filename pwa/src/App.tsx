@@ -9,8 +9,9 @@ import { ShoppingMode } from "./screens/ShoppingMode";
 import { TripSummary } from "./screens/TripSummary";
 import { Reports } from "./screens/Reports";
 import { Settings } from "./screens/Settings";
+import { Tally } from "./screens/Tally";
 
-const NAV_ROUTES = ["/home", "/lists", "/reports", "/settings"];
+const NAV_ROUTES = ["/home", "/lists", "/tally", "/reports", "/settings"];
 
 export default function App() {
   const { pathname } = useLocation();
@@ -26,6 +27,7 @@ export default function App() {
           <Route path="/lists" element={<Lists />} />
           <Route path="/reports" element={<Reports />} />
           <Route path="/settings" element={<Settings />} />
+          <Route path="/tally" element={<Tally />} />
           <Route path="/list/:listId" element={<ListDetail />} />
           <Route path="/list/:listId/add-item" element={<AddItem />} />
           <Route path="/list/:listId/shopping" element={<ShoppingMode />} />

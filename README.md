@@ -27,6 +27,11 @@ Phase 0 delivers the project skeleton for both platforms, per the build plan in
   Trip Summary, Settings (+ Reports placeholder for bottom navigation)
 - ✅ Local mock data (no backend, no auth yet)
 - ✅ Empty states for lists, reports, and guest sharing
+- ✅ Dark **glassmorphism** design system (deep indigo, frosted glass cards,
+  gradient accents, glowing center nav button)
+- ✅ **Quick Tally** — a persistent price calculator that stacks grocery
+  amounts into a live running total (item names optional; persists across
+  reloads). Launched from the glowing center nav button.
 - ⬜ Phase 1: Local Guest Mode MVP (next)
 
 ## Running the PWA

@@ -1,8 +1,11 @@
 package com.cartwise.app.navigation
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BarChart
+import androidx.compose.material.icons.filled.Calculate
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.ShoppingCart
@@ -15,6 +18,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import com.cartwise.app.ui.theme.Gradients
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -28,6 +32,7 @@ import com.cartwise.app.ui.screens.ListsScreen
 import com.cartwise.app.ui.screens.ReportsScreen
 import com.cartwise.app.ui.screens.SettingsScreen
 import com.cartwise.app.ui.screens.ShoppingModeScreen
+import com.cartwise.app.ui.screens.TallyScreen
 import com.cartwise.app.ui.screens.TripSummaryScreen
 import com.cartwise.app.ui.screens.WelcomeScreen
 
@@ -35,6 +40,7 @@ object Routes {
     const val WELCOME = "welcome"
     const val HOME = "home"
     const val LISTS = "lists"
+    const val TALLY = "tally"
     const val REPORTS = "reports"
     const val SETTINGS = "settings"
     const val LIST_DETAIL = "list/{listId}"
@@ -53,6 +59,7 @@ private data class BottomTab(val route: String, val label: String, val icon: Ima
 private val bottomTabs = listOf(
     BottomTab(Routes.HOME, "Home", Icons.Filled.Home),
     BottomTab(Routes.LISTS, "Lists", Icons.Filled.ShoppingCart),
+    BottomTab(Routes.TALLY, "Tally", Icons.Filled.Calculate),
     BottomTab(Routes.REPORTS, "Reports", Icons.Filled.BarChart),
     BottomTab(Routes.SETTINGS, "Settings", Icons.Filled.Settings)
 )
@@ -64,6 +71,10 @@ fun CartWiseApp(navController: NavHostController = rememberNavController()) {
     val showBottomBar = currentRoute in bottomTabs.map { it.route }
 
     Scaffold(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Gradients.AppBackground),
+        containerColor = androidx.compose.ui.graphics.Color.Transparent,
         bottomBar = {
             if (showBottomBar) {
                 NavigationBar {
@@ -111,6 +122,9 @@ fun CartWiseApp(navController: NavHostController = rememberNavController()) {
                 ListsScreen(
                     onOpenList = { listId -> navController.navigate(Routes.listDetail(listId)) }
                 )
+            }
+            composable(Routes.TALLY) {
+                TallyScreen(onBack = { navController.popBackStack() })
             }
             composable(Routes.REPORTS) { ReportsScreen() }
             composable(Routes.SETTINGS) { SettingsScreen() }

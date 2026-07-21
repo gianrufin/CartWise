@@ -1,34 +1,72 @@
-/* CartWise design tokens — mirrors docs/design-tokens.md.
-   Keep in sync with android/.../ui/theme/Color.kt */
+/* CartWise design tokens — dark glassmorphism theme.
+   Mirrors docs/design-tokens.md. Keep in sync with
+   android/.../ui/theme/Color.kt.
+
+   Design language: deep indigo backdrop, frosted translucent "glass" cards
+   with soft light borders and big rounded corners, pastel gradient accents,
+   and a glowing center action button. Immersive dark theme (single look). */
 :root {
-  --color-primary: #0e9f6e;
-  --color-on-primary: #ffffff;
-  --color-primary-container: #d1fae5;
-  --color-on-primary-container: #06281c;
-  --color-secondary: #0e7490;
-  --color-background: #f8faf9;
-  --color-surface: #ffffff;
-  --color-surface-variant: #eef2f0;
-  --color-on-surface: #1b211e;
-  --color-on-surface-muted: #5c6660;
-  --color-outline: #d3dbd7;
-  --color-warning: #b45309;
-  --color-danger: #dc2626;
+  color-scheme: dark;
 
-  --status-pending: #5c6660;
-  --status-purchased: #0e9f6e;
-  --status-unavailable: #dc2626;
-  --status-skipped: #b45309;
-  --status-carried-over: #2563eb;
-
-  --font-display: 700 28px/34px var(--font-family);
-  --font-title-lg: 600 22px/28px var(--font-family);
+  --font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-display: 700 30px/36px var(--font-family);
+  --font-title-lg: 700 23px/29px var(--font-family);
   --font-title: 600 18px/24px var(--font-family);
   --font-body: 400 16px/22px var(--font-family);
   --font-body-sm: 400 14px/20px var(--font-family);
   --font-caption: 500 12px/16px var(--font-family);
-  --font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 
+  /* Backdrop — deep desaturated indigo with a lighter radial glow up top. */
+  --bg-base: #3b3a52;
+  --bg-radial: radial-gradient(
+      120% 80% at 50% -10%,
+      #56547a 0%,
+      #413f5b 45%,
+      #363450 100%
+    )
+    fixed;
+
+  /* Glass surfaces */
+  --glass-bg: rgba(255, 255, 255, 0.07);
+  --glass-bg-strong: rgba(255, 255, 255, 0.11);
+  --glass-border: rgba(255, 255, 255, 0.14);
+  --glass-border-strong: rgba(255, 255, 255, 0.22);
+  --glass-shadow: 0 8px 32px rgba(15, 13, 35, 0.35);
+  --glass-blur: 18px;
+
+  /* Text */
+  --text: #ffffff;
+  --text-muted: rgba(255, 255, 255, 0.64);
+  --text-faint: rgba(255, 255, 255, 0.42);
+
+  /* Accents */
+  --accent: #52c5f7; /* cyan — primary glow / center button */
+  --accent-cyan-grad: linear-gradient(135deg, #58c9f9 0%, #2aa8ee 100%);
+  --accent-indigo: #7c6cf6;
+  --accent-grad: linear-gradient(135deg, #7c6cf6 0%, #a672f6 100%);
+  --accent-purple-grad: linear-gradient(135deg, #8069f7 0%, #a86cf3 100%);
+  --coral: #f0846a;
+  --coral-grad: linear-gradient(135deg, #f79a72 0%, #ef7a6f 100%);
+
+  /* Semantic — greens read as "good / under budget / purchased" */
+  --positive: #38d9a9;
+  --warning: #f5b14c;
+  --danger: #f87171;
+
+  /* Category / status accent hues (tuned for dark glass) */
+  --accent-blue: #5b8def;
+  --accent-teal: #3dd9b3;
+  --accent-violet: #a78bfa;
+  --accent-pink: #f49ac2;
+  --accent-amber: #f0b45d;
+
+  --status-pending: rgba(255, 255, 255, 0.55);
+  --status-purchased: #38d9a9;
+  --status-unavailable: #f87171;
+  --status-skipped: #f5b14c;
+  --status-carried-over: #6ab0ff;
+
+  /* Spacing & shape */
   --space-xs: 4px;
   --space-sm: 8px;
   --space-md: 12px;
@@ -36,34 +74,10 @@
   --space-xl: 24px;
   --space-xxl: 32px;
 
-  --radius-card: 12px;
-  --radius-sheet: 16px;
-  --radius-pill: 28px;
+  --radius-card: 24px;
+  --radius-sheet: 28px;
+  --radius-pill: 999px;
 
   /* Minimum touch target — non-negotiable in shopping mode. */
   --touch-target: 48px;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --color-primary: #34d399;
-    --color-on-primary: #06281c;
-    --color-primary-container: #064e3b;
-    --color-on-primary-container: #d1fae5;
-    --color-secondary: #22d3ee;
-    --color-background: #101613;
-    --color-surface: #1a211d;
-    --color-surface-variant: #242d28;
-    --color-on-surface: #e6ebe8;
-    --color-on-surface-muted: #9aa59f;
-    --color-outline: #3a453f;
-    --color-warning: #f59e0b;
-    --color-danger: #f87171;
-
-    --status-pending: #9aa59f;
-    --status-purchased: #34d399;
-    --status-unavailable: #f87171;
-    --status-skipped: #f59e0b;
-    --status-carried-over: #60a5fa;
-  }
 }

@@ -76,6 +76,28 @@ See `docs/backend/schema-plan.sql` for the full field-level plan.
 Custom permission toggles (change budget, invite, approve requests, complete trip,
 view spending, export, delete items, manage stores, view payment methods) come later.
 
+## Design direction
+
+Immersive **dark glassmorphism**: deep indigo backdrop, frosted translucent
+glass cards, pastel gradient accents (cyan / indigo-purple / coral), and a
+glowing cyan center action button in the bottom navigation that launches Quick
+Tally. See `docs/design-tokens.md` for the full palette and shape scale.
+
+## Quick Tally (persistent calculator)
+
+A persistent, always-available running calculator for **stacking grocery prices
+on the fly** — no list required. Punch in a price, tap **+**, and it adds to a
+running total shown large at the top; an editable "tape" lists every entry.
+
+- **Item names are optional** — the feature is price-first; unnamed entries show
+  as "Item".
+- **Persistent** — entries and total survive app reloads/restarts (localStorage
+  on web; `rememberSaveable` now on Android, Room in Phase 1).
+- Reachable from the glowing **center button** in the bottom nav on every main
+  screen, and from a shortcut card on Home.
+- Guest-friendly and offline (no account needed). Future phases can link a tally
+  into a list/trip and carry entries into item prices.
+
 ## App sections
 
 1. **Onboarding** — Welcome, continue as guest, create account, sign in, select
