@@ -11,6 +11,7 @@ import { TripSummary } from "./screens/TripSummary";
 import { Reports } from "./screens/Reports";
 import { Settings } from "./screens/Settings";
 import { Tally } from "./screens/Tally";
+import { JoinList } from "./screens/JoinList";
 
 const NAV_ROUTES = ["/home", "/lists", "/tally", "/reports", "/settings"];
 
@@ -35,6 +36,7 @@ export default function App() {
           <Route path="/list/:listId/shopping" element={<ShoppingMode />} />
           <Route path="/list/:listId/finish" element={<EndOfTrip />} />
           <Route path="/trip/:tripId" element={<TripSummary />} />
+          <Route path="/join/:token" element={<JoinList />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>

@@ -82,6 +82,9 @@ interface StoreApi {
   // Completes a trip from the list's current item states, records history,
   // and returns the new trip id. Carried-over items are kept on the list.
   completeTrip: (listId: string, paymentMethod: PaymentMethod) => string;
+
+  // Re-pull cloud data (e.g. after joining a shared list). No-op in local mode.
+  refresh: () => void;
 }
 
 const StoreContext = createContext<StoreApi | null>(null);
@@ -97,12 +100,13 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   // Snapshot the store last mirrored to the cloud, so we only push deltas.
   // null until the initial cloud pull completes (guards against premature sync).
   const cloudSyncedRef = useRef<PersistedState | null>(null);
+  // Bumped by refresh() to force a cloud re-pull (e.g. after joining a list).
+  const [refreshNonce, setRefreshNonce] = useState(0);
 
-  // Account switched (sign in/out/up): reload that account's data.
+  // Load/refresh data: on mount, account switch, or manual refresh.
   // For a cloud user, migrate any guest data up, then pull the cloud as source
   // of truth. Otherwise load the local namespace.
   useEffect(() => {
-    if (keyRef.current === key) return;
     keyRef.current = key;
     cloudSyncedRef.current = null;
 
@@ -134,7 +138,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     return () => {
       active = false;
     };
-  }, [key, cloudUserId]);
+  }, [key, cloudUserId, refreshNonce]);
 
   // Persist every change to the local namespace (also a cloud-mode cache).
   useEffect(() => {
@@ -304,6 +308,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     return tripId;
   }, []);
 
+  const refresh = useCallback(() => setRefreshNonce((n) => n + 1), []);
+
   const value = useMemo<StoreApi>(() => {
     const activeLists = state.lists.filter((l) => l.status === "active");
     const now = new Date();
@@ -328,6 +334,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       updateItem,
       deleteItem,
       completeTrip,
+      refresh,
     };
   }, [
     state,
@@ -340,6 +347,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     updateItem,
     deleteItem,
     completeTrip,
+    refresh,
   ]);
 
   return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>;

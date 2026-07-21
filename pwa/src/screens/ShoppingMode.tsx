@@ -4,6 +4,7 @@ import { Icon } from "../components/Icon";
 import { Segmented } from "../components/Segmented";
 import { StatusChip } from "../components/StatusChip";
 import { TopBar } from "../components/TopBar";
+import { roleCan } from "../data/permissions";
 import { useStore } from "../data/store";
 import type { ItemStatus, ListItem } from "../data/types";
 import { actualTotal, isResolved, resolvedCount, unresolvedCount } from "../data/types";
@@ -64,6 +65,9 @@ export function ShoppingMode() {
   const overBudget = budget != null && remaining < 0;
   const nearBudget = budget != null && !overBudget && budget > 0 && cartTotal >= budget * 0.85;
   const remainingClass = overBudget ? "danger-text" : nearBudget ? "warning-text" : "primary-text";
+
+  // Viewers/contributors can watch a trip but not mark items or enter prices.
+  const canShop = roleCan(list.role, "markPurchased");
 
   // Toggling a status; marking purchased with no actual price prefills the
   // estimate so totals move with a single tap.
@@ -182,31 +186,43 @@ export function ShoppingMode() {
                     </div>
                     <StatusChip status={item.status} />
                   </div>
-                  <div className="field">
-                    <label htmlFor={`price-${item.id}`}>Actual price ({symbol(list.currency)})</label>
-                    <input
-                      id={`price-${item.id}`}
-                      inputMode="decimal"
-                      value={item.actualTotalPrice ?? ""}
-                      onChange={(e) => {
-                        const v = parseFloat(e.target.value);
-                        updateItem(list.id, item.id, {
-                          actualTotalPrice: Number.isNaN(v) ? undefined : v,
-                        });
-                      }}
-                    />
-                  </div>
-                  <div className="shopping-actions">
-                    {statusActions.map((action) => (
-                      <button
-                        key={action.status}
-                        className={`chip ${item.status === action.status ? "selected" : ""}`}
-                        onClick={() => setStatus(item, action.status)}
-                      >
-                        {action.label}
-                      </button>
-                    ))}
-                  </div>
+                  {canShop ? (
+                    <>
+                      <div className="field">
+                        <label htmlFor={`price-${item.id}`}>
+                          Actual price ({symbol(list.currency)})
+                        </label>
+                        <input
+                          id={`price-${item.id}`}
+                          inputMode="decimal"
+                          value={item.actualTotalPrice ?? ""}
+                          onChange={(e) => {
+                            const v = parseFloat(e.target.value);
+                            updateItem(list.id, item.id, {
+                              actualTotalPrice: Number.isNaN(v) ? undefined : v,
+                            });
+                          }}
+                        />
+                      </div>
+                      <div className="shopping-actions">
+                        {statusActions.map((action) => (
+                          <button
+                            key={action.status}
+                            className={`chip ${item.status === action.status ? "selected" : ""}`}
+                            onClick={() => setStatus(item, action.status)}
+                          >
+                            {action.label}
+                          </button>
+                        ))}
+                      </div>
+                    </>
+                  ) : (
+                    item.actualTotalPrice != null && (
+                      <div className="muted">
+                        Actual {formatCurrency(item.actualTotalPrice, list.currency, true)}
+                      </div>
+                    )
+                  )}
                 </div>
               ))}
             </div>
@@ -214,14 +230,16 @@ export function ShoppingMode() {
         ))}
       </div>
 
-      <div className="shopping-footer">
-        <button
-          className="btn btn-primary btn-block"
-          onClick={() => navigate(`/list/${list.id}/finish`)}
-        >
-          {unresolved > 0 ? `Finish shopping (${unresolved} unresolved)` : "Finish shopping"}
-        </button>
-      </div>
+      {roleCan(list.role, "completeTrip") && (
+        <div className="shopping-footer">
+          <button
+            className="btn btn-primary btn-block"
+            onClick={() => navigate(`/list/${list.id}/finish`)}
+          >
+            {unresolved > 0 ? `Finish shopping (${unresolved} unresolved)` : "Finish shopping"}
+          </button>
+        </div>
+      )}
     </div>
   );
 }

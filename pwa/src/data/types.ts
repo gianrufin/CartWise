@@ -48,6 +48,17 @@ export interface ShoppingList {
   status: ListStatus;
   createdAt: string; // ISO
   items: ListItem[];
+  // Cloud/sharing (Phase 4): undefined for purely local/owned lists.
+  ownerUserId?: string;
+  role?: import("./permissions").Role;
+  shared?: boolean;
+}
+
+export interface Member {
+  userId: string;
+  role: import("./permissions").Role;
+  displayName?: string;
+  email?: string;
 }
 
 // A completed shopping trip — the unit of spending history.

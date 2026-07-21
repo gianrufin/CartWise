@@ -2,9 +2,12 @@ import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Icon } from "../components/Icon";
 import { ListFormModal } from "../components/ListFormModal";
+import { ShareModal } from "../components/ShareModal";
 import { StatusChip } from "../components/StatusChip";
 import { TopBar } from "../components/TopBar";
 import { useAuth } from "../data/auth";
+import { isCloudConfigured } from "../data/config";
+import { roleCan, ROLE_LABELS } from "../data/permissions";
 import { useStore } from "../data/store";
 import { estimatedTotal } from "../data/types";
 import { formatCurrency } from "../utils/currency";
@@ -12,11 +15,12 @@ import { formatCurrency } from "../utils/currency";
 export function ListDetail() {
   const { listId } = useParams();
   const navigate = useNavigate();
-  const { isGuest } = useAuth();
+  const { isGuest, user } = useAuth();
   const { getList, updateList, deleteList } = useStore();
   const list = getList(listId);
   const [editing, setEditing] = useState(false);
   const [shareBlocked, setShareBlocked] = useState(false);
+  const [sharing, setSharing] = useState(false);
 
   if (!list) {
     return (
@@ -40,19 +44,37 @@ export function ListDetail() {
     grouped.set(key, [...(grouped.get(key) ?? []), item]);
   }
 
+  const canManage = roleCan(list.role, "changeBudget"); // owner-level
+  const canAddItems = roleCan(list.role, "addItems");
+  const canEditItems = roleCan(list.role, "editItems");
+  const canShare = roleCan(list.role, "manageMembers") && isCloudConfigured;
+
+  const openShare = () => {
+    if (isGuest) setShareBlocked(true);
+    else if (canShare) setSharing(true);
+    else setShareBlocked(true);
+  };
+
   return (
     <div>
       <TopBar title={list.name}>
-        <button
-          className="icon-btn"
-          aria-label="List settings"
-          onClick={() => setEditing(true)}
-        >
-          <Icon name="settings" size={18} />
-        </button>
+        {canManage && (
+          <button
+            className="icon-btn"
+            aria-label="List settings"
+            onClick={() => setEditing(true)}
+          >
+            <Icon name="settings" size={18} />
+          </button>
+        )}
       </TopBar>
 
       <div className="screen">
+        {list.shared && (
+          <div className="caption" style={{ color: "var(--accent)" }}>
+            Shared list · you're {ROLE_LABELS[list.role ?? "viewer"]}
+          </div>
+        )}
         <div className="card">
           <div className="cells row">
             <div>
@@ -87,11 +109,7 @@ export function ListDetail() {
           >
             Start shopping
           </button>
-          <button
-            className="btn btn-outline"
-            aria-label="Share list"
-            onClick={() => setShareBlocked(true)}
-          >
+          <button className="btn btn-outline" aria-label="Share list" onClick={openShare}>
             Share
           </button>
         </div>
@@ -114,9 +132,13 @@ export function ListDetail() {
               {items.map((item, i) => (
                 <div key={item.id}>
                   <div
-                    className="row clickable"
+                    className={`row ${canEditItems ? "clickable" : ""}`}
                     style={{ padding: "var(--space-md) var(--space-lg)" }}
-                    onClick={() => navigate(`/list/${list.id}/item/${item.id}`)}
+                    onClick={
+                      canEditItems
+                        ? () => navigate(`/list/${list.id}/item/${item.id}`)
+                        : undefined
+                    }
                   >
                     <div>
                       <div>{item.name}</div>
@@ -143,13 +165,23 @@ export function ListDetail() {
         ))}
       </div>
 
-      <button
-        className="fab"
-        aria-label="Add item"
-        onClick={() => navigate(`/list/${list.id}/add-item`)}
-      >
-        <Icon name="plus" size={26} strokeWidth={2} />
-      </button>
+      {canAddItems && (
+        <button
+          className="fab"
+          aria-label="Add item"
+          onClick={() => navigate(`/list/${list.id}/add-item`)}
+        >
+          <Icon name="plus" size={26} strokeWidth={2} />
+        </button>
+      )}
+
+      {sharing && user && (
+        <ShareModal
+          listId={list.id}
+          currentUserId={user.id}
+          onClose={() => setSharing(false)}
+        />
+      )}
 
       {editing && (
         <ListFormModal
@@ -170,12 +202,18 @@ export function ListDetail() {
         <div className="modal-scrim" onClick={() => setShareBlocked(false)}>
           <div className="modal-sheet" onClick={(e) => e.stopPropagation()}>
             <h2 className="screen-title">
-              {isGuest ? "Sharing needs an account" : "Sharing is almost here"}
+              {isGuest
+                ? "Sharing needs an account"
+                : !isCloudConfigured
+                ? "Sharing needs the cloud"
+                : "Only the owner can invite"}
             </h2>
             <p className="muted">
               {isGuest
                 ? "Create a free account to share this list and sync it across devices. Guest lists stay on this device only."
-                : "Your lists are on your account. Inviting collaborators and live shared shopping arrive in the next update (Phase 4)."}
+                : !isCloudConfigured
+                ? "This build isn't connected to a cloud backend, so lists stay on this device."
+                : "You're a collaborator on this shared list. Ask the owner to change roles or invite others."}
             </p>
             <button className="btn btn-primary btn-block" onClick={() => setShareBlocked(false)}>
               Got it

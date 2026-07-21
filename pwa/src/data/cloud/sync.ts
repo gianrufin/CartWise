@@ -23,14 +23,17 @@ export interface CloudState {
   trips: Trip[];
 }
 
-// Pull every list (with items) and trip (with its payment method) for the user.
+// Pull every accessible list (owned + shared, RLS-scoped) with items, plus the
+// user's own trips. Each list carries the caller's role for UI gating.
 export async function pullState(userId: string): Promise<CloudState> {
   const sb = getSupabase();
   if (!sb) return { lists: [], trips: [] };
 
-  const [listsRes, itemsRes, tripsRes, paymentsRes] = await Promise.all([
-    sb.from("shopping_lists").select("*").eq("owner_user_id", userId),
+  // No owner filter on lists/items: RLS returns owned + shared rows.
+  const [listsRes, itemsRes, membersRes, tripsRes, paymentsRes] = await Promise.all([
+    sb.from("shopping_lists").select("*"),
     sb.from("list_items").select("*"),
+    sb.from("list_members").select("list_id,user_id,role"),
     sb.from("shopping_trips").select("*").eq("owner_user_id", userId),
     sb.from("trip_payments").select("*"),
   ]);
@@ -42,14 +45,25 @@ export async function pullState(userId: string): Promise<CloudState> {
     itemsByList.set(row.list_id, arr);
   }
 
+  // Role the caller holds on each list they're a member of.
+  const myRole = new Map<string, import("../permissions").Role>();
+  for (const m of (membersRes.data ?? []) as { list_id: string; user_id: string; role: string }[]) {
+    if (m.user_id === userId) myRole.set(m.list_id, m.role as import("../permissions").Role);
+  }
+
   const paymentByTrip = new Map<string, PaymentMethod>();
   for (const pay of (paymentsRes.data ?? []) as { trip_id: string; payment_method: string }[]) {
     paymentByTrip.set(pay.trip_id, pay.payment_method as PaymentMethod);
   }
 
-  const lists = ((listsRes.data ?? []) as ListRow[]).map((row) =>
-    rowToList(row, (itemsByList.get(row.id) ?? []).map(rowToItem))
-  );
+  const lists = ((listsRes.data ?? []) as ListRow[]).map((row) => {
+    const role: import("../permissions").Role =
+      row.owner_user_id === userId ? "owner" : myRole.get(row.id) ?? "viewer";
+    return rowToList(row, (itemsByList.get(row.id) ?? []).map(rowToItem), {
+      role,
+      currentUserId: userId,
+    });
+  });
   const trips = ((tripsRes.data ?? []) as TripRow[]).map((row) =>
     rowToTrip(row, paymentByTrip.get(row.id) ?? "cash")
   );
@@ -58,11 +72,16 @@ export async function pullState(userId: string): Promise<CloudState> {
 }
 
 // Upsert a list and replace its items (simple full-replace sync for the MVP).
+// For a shared list the caller doesn't own, only the items are pushed — the
+// list row (name/budget) is owner-only, and RLS would reject it anyway.
 export async function pushList(list: ShoppingList, userId: string): Promise<void> {
   const sb = getSupabase();
   if (!sb) return;
 
-  await sb.from("shopping_lists").upsert(listToRow(list, userId));
+  const isOwner = !list.ownerUserId || list.ownerUserId === userId;
+  if (isOwner) {
+    await sb.from("shopping_lists").upsert(listToRow(list, userId));
+  }
   await sb.from("list_items").delete().eq("list_id", list.id);
   if (list.items.length > 0) {
     await sb.from("list_items").insert(list.items.map(itemToRow));

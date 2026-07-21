@@ -27,7 +27,12 @@ export interface ListRow {
   created_at: string;
 }
 
-export function rowToList(row: ListRow, items: ListItem[] = []): ShoppingList {
+export function rowToList(
+  row: ListRow,
+  items: ListItem[] = [],
+  opts: { role?: import("../permissions").Role; currentUserId?: string } = {}
+): ShoppingList {
+  const role = opts.role;
   return {
     id: row.id,
     name: row.name,
@@ -37,6 +42,9 @@ export function rowToList(row: ListRow, items: ListItem[] = []): ShoppingList {
     status: row.status === "archived" ? "archived" : "active",
     createdAt: row.created_at,
     items,
+    ownerUserId: row.owner_user_id,
+    role,
+    shared: opts.currentUserId != null && row.owner_user_id !== opts.currentUserId,
   };
 }
 
