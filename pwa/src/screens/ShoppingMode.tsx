@@ -68,6 +68,8 @@ export function ShoppingMode() {
 
   // Viewers/contributors can watch a trip but not mark items or enter prices.
   const canShop = roleCan(list.role, "markPurchased");
+  // Phase 5: a collaborator without spending permission sees estimates only.
+  const canViewSpending = list.canViewSpending ?? true;
 
   // Toggling a status; marking purchased with no actual price prefills the
   // estimate so totals move with a single tap.
@@ -86,28 +88,40 @@ export function ShoppingMode() {
     <div>
       <TopBar title={`Shopping · ${list.name}`} />
       <div className="budget-summary">
-        <div className="cells">
-          <div>
-            <div className="caption">Budget</div>
-            <div className="amount">
-              {budget != null ? formatCurrency(budget, list.currency, true) : "—"}
+        {canViewSpending ? (
+          <>
+            <div className="cells">
+              <div>
+                <div className="caption">Budget</div>
+                <div className="amount">
+                  {budget != null ? formatCurrency(budget, list.currency, true) : "—"}
+                </div>
+              </div>
+              <div>
+                <div className="caption">Cart total</div>
+                <div className="amount-lg">{formatCurrency(cartTotal, list.currency, true)}</div>
+              </div>
+              <div>
+                <div className="caption">{overBudget ? "Over budget" : "Remaining"}</div>
+                <div className={`amount ${remainingClass}`}>
+                  {budget != null ? formatCurrency(Math.abs(remaining), list.currency, true) : "—"}
+                </div>
+              </div>
             </div>
-          </div>
-          <div>
-            <div className="caption">Cart total</div>
-            <div className="amount-lg">{formatCurrency(cartTotal, list.currency, true)}</div>
-          </div>
-          <div>
-            <div className="caption">{overBudget ? "Over budget" : "Remaining"}</div>
-            <div className={`amount ${remainingClass}`}>
-              {budget != null ? formatCurrency(Math.abs(remaining), list.currency, true) : "—"}
+            <div className="muted" style={{ marginTop: "var(--space-sm)" }}>
+              {resolved} resolved · {unresolved} to go
+              {overBudget && " · over budget"}
             </div>
-          </div>
-        </div>
-        <div className="muted" style={{ marginTop: "var(--space-sm)" }}>
-          {resolved} resolved · {unresolved} to go
-          {overBudget && " · over budget"}
-        </div>
+          </>
+        ) : (
+          <>
+            <div className="caption">Progress</div>
+            <div className="amount-lg">
+              {resolved}/{items.length} items
+            </div>
+            <div className="muted">Spending is hidden for your role on this list.</div>
+          </>
+        )}
       </div>
 
       <div className="toolbar">
@@ -217,6 +231,7 @@ export function ShoppingMode() {
                       </div>
                     </>
                   ) : (
+                    canViewSpending &&
                     item.actualTotalPrice != null && (
                       <div className="muted">
                         Actual {formatCurrency(item.actualTotalPrice, list.currency, true)}

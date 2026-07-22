@@ -33,7 +33,7 @@ export async function pullState(userId: string): Promise<CloudState> {
   const [listsRes, itemsRes, membersRes, tripsRes, paymentsRes] = await Promise.all([
     sb.from("shopping_lists").select("*"),
     sb.from("list_items").select("*"),
-    sb.from("list_members").select("list_id,user_id,role"),
+    sb.from("list_members").select("list_id,user_id,role,can_view_spending"),
     sb.from("shopping_trips").select("*").eq("owner_user_id", userId),
     sb.from("trip_payments").select("*"),
   ]);
@@ -45,10 +45,19 @@ export async function pullState(userId: string): Promise<CloudState> {
     itemsByList.set(row.list_id, arr);
   }
 
-  // Role the caller holds on each list they're a member of.
+  // Role + spending permission the caller holds on each list they're a member of.
   const myRole = new Map<string, import("../permissions").Role>();
-  for (const m of (membersRes.data ?? []) as { list_id: string; user_id: string; role: string }[]) {
-    if (m.user_id === userId) myRole.set(m.list_id, m.role as import("../permissions").Role);
+  const mySpending = new Map<string, boolean>();
+  for (const m of (membersRes.data ?? []) as {
+    list_id: string;
+    user_id: string;
+    role: string;
+    can_view_spending: boolean;
+  }[]) {
+    if (m.user_id === userId) {
+      myRole.set(m.list_id, m.role as import("../permissions").Role);
+      mySpending.set(m.list_id, m.can_view_spending);
+    }
   }
 
   const paymentByTrip = new Map<string, PaymentMethod>();
@@ -62,6 +71,7 @@ export async function pullState(userId: string): Promise<CloudState> {
     return rowToList(row, (itemsByList.get(row.id) ?? []).map(rowToItem), {
       role,
       currentUserId: userId,
+      canViewSpending: mySpending.get(row.id) ?? true,
     });
   });
   const trips = ((tripsRes.data ?? []) as TripRow[]).map((row) =>

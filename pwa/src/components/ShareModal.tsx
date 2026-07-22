@@ -6,6 +6,7 @@ import {
   listMembers,
   removeMember,
   updateMemberRole,
+  updateMemberSpending,
 } from "../data/cloud/sharing";
 import { Icon } from "./Icon";
 
@@ -116,6 +117,17 @@ export function ShareModal({ listId, currentUserId, onClose }: Props) {
                   </button>
                 </div>
               </div>
+              <label className="spending-toggle">
+                <input
+                  type="checkbox"
+                  checked={m.canViewSpending ?? true}
+                  onChange={async (e) => {
+                    await updateMemberSpending(listId, m.userId, e.target.checked);
+                    void refresh();
+                  }}
+                />
+                Can see spending (actual prices &amp; totals)
+              </label>
             </div>
           ))}
         </div>

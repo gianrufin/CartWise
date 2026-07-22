@@ -48,10 +48,13 @@ export interface ShoppingList {
   status: ListStatus;
   createdAt: string; // ISO
   items: ListItem[];
-  // Cloud/sharing (Phase 4): undefined for purely local/owned lists.
+  // Cloud/sharing (Phase 4–5): undefined for purely local/owned lists.
   ownerUserId?: string;
   role?: import("./permissions").Role;
   shared?: boolean;
+  // Phase 5: whether the current (member) user may see actual spending.
+  // Owners and local lists are always true.
+  canViewSpending?: boolean;
 }
 
 export interface Member {
@@ -59,6 +62,7 @@ export interface Member {
   role: import("./permissions").Role;
   displayName?: string;
   email?: string;
+  canViewSpending?: boolean;
 }
 
 // A completed shopping trip — the unit of spending history.

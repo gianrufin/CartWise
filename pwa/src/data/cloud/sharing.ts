@@ -52,19 +52,36 @@ export async function listMembers(listId: string): Promise<Member[]> {
   if (!sb) return [];
   const { data } = await sb
     .from("list_members")
-    .select("user_id,role,display_name,email")
+    .select("user_id,role,display_name,email,can_view_spending")
     .eq("list_id", listId);
   return ((data ?? []) as {
     user_id: string;
     role: string;
     display_name: string | null;
     email: string | null;
+    can_view_spending: boolean;
   }[]).map((m) => ({
     userId: m.user_id,
     role: m.role as Role,
     displayName: m.display_name ?? undefined,
     email: m.email ?? undefined,
+    canViewSpending: m.can_view_spending,
   }));
+}
+
+export async function updateMemberSpending(
+  listId: string,
+  userId: string,
+  canViewSpending: boolean
+): Promise<void> {
+  const sb = getSupabase();
+  if (!sb) return;
+  const { error } = await sb
+    .from("list_members")
+    .update({ can_view_spending: canViewSpending })
+    .eq("list_id", listId)
+    .eq("user_id", userId);
+  if (error) throw new Error(error.message);
 }
 
 export async function updateMemberRole(listId: string, userId: string, role: Role): Promise<void> {

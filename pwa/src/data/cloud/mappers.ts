@@ -24,15 +24,20 @@ export interface ListRow {
   currency: string;
   budget_amount: number | null;
   status: string;
+  visibility?: string | null; // trigger-managed; not written by listToRow
   created_at: string;
 }
 
 export function rowToList(
   row: ListRow,
   items: ListItem[] = [],
-  opts: { role?: import("../permissions").Role; currentUserId?: string } = {}
+  opts: {
+    role?: import("../permissions").Role;
+    currentUserId?: string;
+    canViewSpending?: boolean;
+  } = {}
 ): ShoppingList {
-  const role = opts.role;
+  const isOwner = opts.currentUserId != null && row.owner_user_id === opts.currentUserId;
   return {
     id: row.id,
     name: row.name,
@@ -43,8 +48,10 @@ export function rowToList(
     createdAt: row.created_at,
     items,
     ownerUserId: row.owner_user_id,
-    role,
-    shared: opts.currentUserId != null && row.owner_user_id !== opts.currentUserId,
+    role: opts.role,
+    // Shared if it has been shared out (visibility) or the viewer isn't the owner.
+    shared: (row.visibility != null && row.visibility !== "private") || (opts.currentUserId != null && !isOwner),
+    canViewSpending: isOwner ? true : opts.canViewSpending ?? true,
   };
 }
 

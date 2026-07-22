@@ -70,9 +70,15 @@ export function ListDetail() {
       </TopBar>
 
       <div className="screen">
-        {list.shared && (
-          <div className="caption" style={{ color: "var(--accent)" }}>
-            Shared list · you're {ROLE_LABELS[list.role ?? "viewer"]}
+        {isCloudConfigured && !isGuest && (
+          <div style={{ display: "flex", gap: "var(--space-sm)", alignItems: "center" }}>
+            <span className={`badge ${list.shared ? "shared" : ""}`}>
+              <Icon name={list.shared ? "users" : "lock"} size={13} />
+              {list.shared ? "Shared" : "Private"}
+            </span>
+            {list.shared && (
+              <span className="caption">you're {ROLE_LABELS[list.role ?? "viewer"]}</span>
+            )}
           </div>
         )}
         <div className="card">
