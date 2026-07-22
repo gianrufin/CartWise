@@ -1,8 +1,10 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AuthModal } from "../components/AuthModal";
 import { Icon } from "../components/Icon";
+import { PayPalButton } from "../components/PayPalButton";
 import { TopBar } from "../components/TopBar";
 import { useAuth } from "../data/auth";
+import { isPaypalConfigured } from "../data/config";
 import { isPremium } from "../data/entitlements";
 
 const PREMIUM_PERKS = [
@@ -22,17 +24,44 @@ const FREE_PERKS = [
 ];
 
 /**
- * Subscription screen (Phase 8). Real billing (Google Play on Android, a web
- * provider later) is out of scope for this build — the "upgrade" here flips the
- * entitlement for demo/testing so premium gates can be exercised end to end.
+ * Subscription screen (Phase 8). When PayPal is configured, shows the real
+ * PayPal subscription button; premium unlocks only after PayPal's webhook marks
+ * the account active (we poll users_profile via refreshUser). Otherwise it
+ * falls back to a dev demo upgrade for testing the gates.
  */
 export function Subscription() {
-  const { user, isGuest, updateProfile } = useAuth();
+  const { user, isGuest, updateProfile, refreshUser } = useAuth();
   const premium = isPremium(user);
   const [busy, setBusy] = useState(false);
   const [showAuth, setShowAuth] = useState(false);
+  const [awaiting, setAwaiting] = useState(false);
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  const setPlan = async (status: string) => {
+  // After PayPal approval, poll for the webhook to flip the status to active.
+  useEffect(() => {
+    if (!awaiting) return;
+    let tries = 0;
+    pollRef.current = setInterval(async () => {
+      tries += 1;
+      await refreshUser();
+      if (tries >= 20 && pollRef.current) {
+        clearInterval(pollRef.current);
+        setAwaiting(false);
+      }
+    }, 3000);
+    return () => {
+      if (pollRef.current) clearInterval(pollRef.current);
+    };
+  }, [awaiting, refreshUser]);
+
+  useEffect(() => {
+    if (premium && pollRef.current) {
+      clearInterval(pollRef.current);
+      setAwaiting(false);
+    }
+  }, [premium]);
+
+  const demoSetPlan = async (status: string) => {
     setBusy(true);
     try {
       await updateProfile({ subscriptionStatus: status });
@@ -84,19 +113,42 @@ export function Subscription() {
             </button>
           </>
         ) : premium ? (
-          <button className="btn btn-outline btn-block" disabled={busy} onClick={() => setPlan("free")}>
-            {busy ? "…" : "Downgrade to Free"}
-          </button>
+          <div className="card">
+            <p className="muted">
+              You're on Premium. Manage or cancel your subscription anytime from your
+              PayPal account.
+            </p>
+          </div>
+        ) : isPaypalConfigured && user ? (
+          <>
+            {awaiting ? (
+              <div className="card">
+                <p className="muted">
+                  Payment received — activating your subscription… this can take a few
+                  seconds.
+                </p>
+              </div>
+            ) : (
+              <PayPalButton userId={user.id} onApproved={() => setAwaiting(true)} />
+            )}
+          </>
         ) : (
-          <button className="btn btn-primary btn-block" disabled={busy} onClick={() => setPlan("active")}>
-            {busy ? "…" : "Upgrade to Premium"}
-          </button>
+          <>
+            <button className="btn btn-primary btn-block" disabled={busy} onClick={() => demoSetPlan("active")}>
+              {busy ? "…" : "Upgrade to Premium"}
+            </button>
+            <p className="caption" style={{ textAlign: "center" }}>
+              Demo build — no real payment. Connect PayPal (see docs/PAYMENTS.md) to take
+              real subscriptions.
+            </p>
+          </>
         )}
 
-        <p className="caption" style={{ textAlign: "center" }}>
-          Demo build — no real payment is taken. Billing (Google Play / web provider)
-          comes with the store release.
-        </p>
+        {premium && !isPaypalConfigured && (
+          <button className="btn btn-text btn-block" onClick={() => demoSetPlan("free")}>
+            Downgrade (demo)
+          </button>
+        )}
       </div>
 
       {showAuth && (

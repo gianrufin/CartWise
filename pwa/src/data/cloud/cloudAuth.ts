@@ -91,6 +91,19 @@ export async function cloudHasSession(): Promise<boolean> {
   return Boolean(data.session);
 }
 
+// Authoritative subscription status from users_profile (set only by the billing
+// webhook once the lockdown migration is applied). Falls back to metadata.
+export async function cloudSubscriptionStatus(userId: string): Promise<string | null> {
+  const sb = getSupabase();
+  if (!sb) return null;
+  const { data } = await sb
+    .from("users_profile")
+    .select("subscription_status")
+    .eq("id", userId)
+    .maybeSingle();
+  return (data?.subscription_status as string) ?? null;
+}
+
 export async function cloudCurrentUser(): Promise<User | null> {
   const sb = getSupabase();
   if (!sb) return null;

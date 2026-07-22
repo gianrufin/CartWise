@@ -130,6 +130,9 @@ function LocalAuthProvider({ children }: { children: ReactNode }) {
     [userId]
   );
 
+  // Local accounts have no external source to re-read.
+  const refreshUser = useCallback(async () => {}, []);
+
   const value = useMemo<AuthApi>(() => {
     const account = accounts.find((a) => a.id === userId) ?? null;
     const user: User | null = account
@@ -141,8 +144,17 @@ function LocalAuthProvider({ children }: { children: ReactNode }) {
           subscriptionStatus: account.subscriptionStatus ?? "free",
         }
       : null;
-    return { user, isGuest: user === null, loading: false, signUp, signIn, signOut, updateProfile };
-  }, [accounts, userId, signUp, signIn, signOut, updateProfile]);
+    return {
+      user,
+      isGuest: user === null,
+      loading: false,
+      signUp,
+      signIn,
+      signOut,
+      updateProfile,
+      refreshUser,
+    };
+  }, [accounts, userId, signUp, signIn, signOut, updateProfile, refreshUser]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

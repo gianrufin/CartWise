@@ -6,6 +6,7 @@ import {
   cloudSignIn,
   cloudSignOut,
   cloudSignUp,
+  cloudSubscriptionStatus,
   cloudUpdateProfile,
   onCloudAuthChange,
 } from "./cloudAuth";
@@ -17,12 +18,24 @@ export default function CloudAuthProvider({ children }: { children: ReactNode })
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // Enrich a session user with the authoritative subscription status from
+  // users_profile (webhook-controlled), overriding the JWT metadata copy.
+  const withStatus = async (u: User | null): Promise<User | null> => {
+    if (!u) return null;
+    const status = await cloudSubscriptionStatus(u.id);
+    return status ? { ...u, subscriptionStatus: status } : u;
+  };
+
   useEffect(() => {
     let active = true;
     cloudCurrentUser()
+      .then(withStatus)
       .then((u) => active && setUser(u))
       .finally(() => active && setLoading(false));
-    const unsub = onCloudAuthChange((u) => setUser(u));
+    const unsub = onCloudAuthChange(async (u) => {
+      const enriched = await withStatus(u);
+      if (active) setUser(enriched);
+    });
     return () => {
       active = false;
       unsub();
@@ -54,9 +67,23 @@ export default function CloudAuthProvider({ children }: { children: ReactNode })
     setUser((prev) => (prev ? { ...prev, ...patch } : prev));
   }, []);
 
+  const refreshUser = useCallback(async () => {
+    const u = await cloudCurrentUser();
+    setUser(await withStatus(u));
+  }, []);
+
   const value = useMemo<AuthApi>(
-    () => ({ user, isGuest: user === null, loading, signUp, signIn, signOut, updateProfile }),
-    [user, loading, signUp, signIn, signOut, updateProfile]
+    () => ({
+      user,
+      isGuest: user === null,
+      loading,
+      signUp,
+      signIn,
+      signOut,
+      updateProfile,
+      refreshUser,
+    }),
+    [user, loading, signUp, signIn, signOut, updateProfile, refreshUser]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

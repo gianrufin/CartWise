@@ -30,6 +30,8 @@ export interface AuthApi {
   signIn: (input: { email: string; password: string }) => Promise<void>;
   signOut: () => Promise<void>;
   updateProfile: (patch: ProfilePatch) => Promise<void>;
+  // Re-read the current user (e.g. subscription status after a PayPal payment).
+  refreshUser: () => Promise<void>;
 }
 
 export const AuthContext = createContext<AuthApi | null>(null);
