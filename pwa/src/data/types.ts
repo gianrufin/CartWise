@@ -35,6 +35,8 @@ export interface ListItem {
   store?: string;
   priority: ItemPriority;
   status: ItemStatus;
+  // Phase 11: storage path of an optional compressed photo (cloud only).
+  photoUrl?: string;
 }
 
 export type ListStatus = "active" | "archived";

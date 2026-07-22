@@ -82,9 +82,20 @@ build plan in [`docs/BLUEPRINT.md`](docs/BLUEPRINT.md):
   actual prices/totals in the UI. **Verified live**: private default,
   non-member isolation, join→shared / remove→private transitions, and the
   spending flag round-trip.
-- ⬜ Phase 5 hardening (optional): column-level spending enforcement via a
-  security-barrier view (UI-gated today)
-- ⬜ Phase 6: Multiple lists, stores, and groups
+- ✅ **Phase 6 (partial):** list duplication + archive/restore (Active/Archived
+  filter). Multi-store & store subtotals already existed; households/groups
+  deferred.
+- ✅ **Phase 7 (reports):** spending summary, budget vs actual, by list, by
+  payment method, with premium date ranges. Aggregations unit-tested.
+- ✅ **Phase 8 (subscriptions):** entitlements + feature gates + subscription
+  screen (demo upgrade; real billing deferred to store release).
+- ✅ **Phase 9 (export):** premium CSV export of trips (unit-tested builder).
+- ✅ **Phase 12 (price history):** records prices paid, suggests last price when
+  adding an item (local cache). Verified in-browser.
+- 🔨 **Phase 10 (item requests)** & **Phase 11 (photos):** built; need
+  migration `0004_requests_photos.sql` applied (request-only role + requests
+  table + private photo bucket). Verification pending migration.
+- ⬜ Phase 5 hardening (optional): column-level spending enforcement via a view
 
 > Scope note: development is **web (PWA) only** going forward — the Android
 > module stays at its Phase 0 scaffold.

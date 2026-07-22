@@ -1,7 +1,9 @@
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Icon } from "../components/Icon";
+import { ItemPhoto } from "../components/ItemPhoto";
 import { ListFormModal } from "../components/ListFormModal";
+import { RequestsSection } from "../components/RequestsSection";
 import { ShareModal } from "../components/ShareModal";
 import { StatusChip } from "../components/StatusChip";
 import { TopBar } from "../components/TopBar";
@@ -129,6 +131,15 @@ export function ListDetail() {
           </div>
         )}
 
+        {isCloudConfigured && list.shared && user && (
+          <RequestsSection
+            listId={list.id}
+            currency={list.currency}
+            role={list.role}
+            user={{ id: user.id, displayName: user.displayName }}
+          />
+        )}
+
         {[...grouped.entries()].map(([category, items]) => (
           <div key={category}>
             <h2 className="section-title" style={{ marginBottom: "var(--space-sm)" }}>
@@ -146,12 +157,15 @@ export function ListDetail() {
                         : undefined
                     }
                   >
-                    <div>
-                      <div>{item.name}</div>
-                      <div className="muted">
-                        {trimQty(item.quantity)}
-                        {item.unit ? ` ${item.unit}` : ""}
-                        {item.store ? ` · ${item.store}` : ""}
+                    <div style={{ display: "flex", alignItems: "center", gap: "var(--space-md)", minWidth: 0 }}>
+                      {item.photoUrl && <ItemPhoto path={item.photoUrl} size={40} />}
+                      <div style={{ minWidth: 0 }}>
+                        <div>{item.name}</div>
+                        <div className="muted">
+                          {trimQty(item.quantity)}
+                          {item.unit ? ` ${item.unit}` : ""}
+                          {item.store ? ` · ${item.store}` : ""}
+                        </div>
                       </div>
                     </div>
                     <div style={{ textAlign: "right", display: "grid", gap: "4px" }}>

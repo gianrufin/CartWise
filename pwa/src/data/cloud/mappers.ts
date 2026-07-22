@@ -84,6 +84,7 @@ export interface ItemRow {
   store: string | null;
   priority: string;
   status: string;
+  photo_url: string | null;
 }
 
 export function rowToItem(row: ItemRow): ListItem {
@@ -102,6 +103,7 @@ export function rowToItem(row: ItemRow): ListItem {
     store: nn(row.store),
     priority: row.priority as ItemPriority,
     status: row.status as ItemStatus,
+    photoUrl: nn(row.photo_url),
   };
 }
 
@@ -121,6 +123,7 @@ export function itemToRow(item: ListItem): ItemRow {
     store: item.store ?? null,
     priority: item.priority,
     status: item.status,
+    photo_url: item.photoUrl ?? null,
   };
 }
 

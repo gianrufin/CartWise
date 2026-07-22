@@ -39,6 +39,7 @@ const item: ListItem = {
   store: "SM Supermarket",
   priority: "essential",
   status: "purchased",
+  photoUrl: undefined,
 };
 
 const trip: Trip = {

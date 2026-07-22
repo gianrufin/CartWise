@@ -1,11 +1,17 @@
 import { useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Icon } from "../components/Icon";
+import { ItemPhoto } from "../components/ItemPhoto";
 import { TopBar } from "../components/TopBar";
+import { useAuth } from "../data/auth";
+import { isCloudConfigured } from "../data/config";
 import { defaultCategories, defaultStores } from "../data/constants";
+import { uploadItemPhoto } from "../data/cloud/photos";
+import { isPremium } from "../data/entitlements";
 import { getLastPrice } from "../data/priceHistory";
 import { useStore } from "../data/store";
 import { derivePrices, type ItemPriority } from "../data/types";
+import { compressImage } from "../utils/image";
 import { formatCurrency } from "../utils/currency";
 import { formatDate } from "../utils/date";
 
@@ -42,6 +48,11 @@ export function AddItem() {
   const [category, setCategory] = useState<string | null>(existing?.category ?? null);
   const [priority, setPriority] = useState<ItemPriority>(existing?.priority ?? "normal");
   const [notes, setNotes] = useState(existing?.notes ?? "");
+  const [photoPath, setPhotoPath] = useState<string | undefined>(existing?.photoUrl);
+  const [photoBusy, setPhotoBusy] = useState(false);
+
+  const { user } = useAuth();
+  const photosEnabled = isCloudConfigured && isPremium(user);
 
   if (!list) {
     return (
@@ -78,6 +89,7 @@ export function AddItem() {
       category: category ?? undefined,
       priority,
       notes: notes.trim() || undefined,
+      photoUrl: photoPath,
     };
     if (isEdit && existing) {
       updateItem(list.id, existing.id, values);
@@ -249,7 +261,44 @@ export function AddItem() {
           />
         </div>
 
-        <button className="btn btn-primary btn-block" disabled={!canSave} onClick={save}>
+        {photosEnabled && (
+          <div className="field">
+            <label>Photo (optional)</label>
+            <div style={{ display: "flex", alignItems: "center", gap: "var(--space-md)" }}>
+              {photoPath && <ItemPhoto path={photoPath} size={56} />}
+              <label className="btn btn-outline" style={{ cursor: "pointer" }}>
+                {photoBusy ? "Uploading…" : photoPath ? "Replace photo" : "Add photo"}
+                <input
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
+                  style={{ display: "none" }}
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    setPhotoBusy(true);
+                    try {
+                      const blob = await compressImage(file);
+                      const path = await uploadItemPhoto(list.id, blob);
+                      setPhotoPath(path);
+                    } catch {
+                      /* surfaced via missing thumbnail */
+                    } finally {
+                      setPhotoBusy(false);
+                    }
+                  }}
+                />
+              </label>
+              {photoPath && (
+                <button className="btn btn-text danger-text" onClick={() => setPhotoPath(undefined)}>
+                  Remove
+                </button>
+              )}
+            </div>
+          </div>
+        )}
+
+        <button className="btn btn-primary btn-block" disabled={!canSave || photoBusy} onClick={save}>
           {isEdit ? "Save item" : "Add item"}
         </button>
       </div>
