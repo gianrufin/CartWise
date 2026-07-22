@@ -10,6 +10,7 @@ import { EndOfTrip } from "./screens/EndOfTrip";
 import { TripSummary } from "./screens/TripSummary";
 import { Reports } from "./screens/Reports";
 import { Settings } from "./screens/Settings";
+import { Subscription } from "./screens/Subscription";
 import { Tally } from "./screens/Tally";
 import { JoinList } from "./screens/JoinList";
 
@@ -37,6 +38,7 @@ export default function App() {
           <Route path="/list/:listId/finish" element={<EndOfTrip />} />
           <Route path="/trip/:tripId" element={<TripSummary />} />
           <Route path="/join/:token" element={<JoinList />} />
+          <Route path="/subscription" element={<Subscription />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>

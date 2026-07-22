@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
-import { AuthContext, type AuthApi, type User } from "../authContext";
+import { AuthContext, type AuthApi, type ProfilePatch, type User } from "../authContext";
 import {
   cloudCurrentUser,
   cloudHasSession,
@@ -49,13 +49,10 @@ export default function CloudAuthProvider({ children }: { children: ReactNode })
     setUser(null);
   }, []);
 
-  const updateProfile = useCallback(
-    async (patch: Partial<Pick<User, "displayName" | "defaultCurrency">>) => {
-      await cloudUpdateProfile(patch);
-      setUser((prev) => (prev ? { ...prev, ...patch } : prev));
-    },
-    []
-  );
+  const updateProfile = useCallback(async (patch: ProfilePatch) => {
+    await cloudUpdateProfile(patch);
+    setUser((prev) => (prev ? { ...prev, ...patch } : prev));
+  }, []);
 
   const value = useMemo<AuthApi>(
     () => ({ user, isGuest: user === null, loading, signUp, signIn, signOut, updateProfile }),

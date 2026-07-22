@@ -14,7 +14,13 @@ export interface User {
   email: string;
   displayName: string;
   defaultCurrency: string;
+  // Phase 8: 'free' | 'trialing' | 'active' | 'past_due' | 'cancelled' | 'expired'
+  subscriptionStatus: string;
 }
+
+export type ProfilePatch = Partial<
+  Pick<User, "displayName" | "defaultCurrency" | "subscriptionStatus">
+>;
 
 export interface AuthApi {
   user: User | null;
@@ -23,7 +29,7 @@ export interface AuthApi {
   signUp: (input: { email: string; password: string; displayName?: string }) => Promise<void>;
   signIn: (input: { email: string; password: string }) => Promise<void>;
   signOut: () => Promise<void>;
-  updateProfile: (patch: Partial<Pick<User, "displayName" | "defaultCurrency">>) => Promise<void>;
+  updateProfile: (patch: ProfilePatch) => Promise<void>;
 }
 
 export const AuthContext = createContext<AuthApi | null>(null);

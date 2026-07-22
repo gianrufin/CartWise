@@ -7,7 +7,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { AuthContext, type AuthApi, type User, storeKeyFor } from "./authContext";
+import { AuthContext, type AuthApi, type ProfilePatch, type User, storeKeyFor } from "./authContext";
 import { isCloudConfigured } from "./config";
 
 // Phase 3 — accounts and sessions.
@@ -99,6 +99,7 @@ function LocalAuthProvider({ children }: { children: ReactNode }) {
         email: normalized,
         displayName: displayName?.trim() || normalized.split("@")[0],
         defaultCurrency: "PHP",
+        subscriptionStatus: "free",
         passwordHash: hashPassword(password),
       };
       migrateGuestData(account.id);
@@ -122,7 +123,7 @@ function LocalAuthProvider({ children }: { children: ReactNode }) {
   const signOut = useCallback(async () => setUserId(null), []);
 
   const updateProfile = useCallback(
-    async (patch: Partial<Pick<User, "displayName" | "defaultCurrency">>) => {
+    async (patch: ProfilePatch) => {
       if (!userId) return;
       setAccounts((prev) => prev.map((a) => (a.id === userId ? { ...a, ...patch } : a)));
     },
@@ -137,6 +138,7 @@ function LocalAuthProvider({ children }: { children: ReactNode }) {
           email: account.email,
           displayName: account.displayName,
           defaultCurrency: account.defaultCurrency,
+          subscriptionStatus: account.subscriptionStatus ?? "free",
         }
       : null;
     return { user, isGuest: user === null, loading: false, signUp, signIn, signOut, updateProfile };

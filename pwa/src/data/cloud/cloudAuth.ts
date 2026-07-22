@@ -17,6 +17,7 @@ function toUser(u: SupabaseUser): User {
     displayName:
       (meta.display_name as string) || (u.email ? u.email.split("@")[0] : "You"),
     defaultCurrency: (meta.default_currency as string) || "PHP",
+    subscriptionStatus: (meta.subscription_status as string) || "free",
   };
 }
 
@@ -60,21 +61,23 @@ export async function cloudSignOut(): Promise<void> {
 export async function cloudUpdateProfile(patch: {
   displayName?: string;
   defaultCurrency?: string;
+  subscriptionStatus?: string;
 }): Promise<void> {
   const sb = getSupabase();
   if (!sb) return;
+  const meta = {
+    ...(patch.displayName !== undefined ? { display_name: patch.displayName } : {}),
+    ...(patch.defaultCurrency !== undefined ? { default_currency: patch.defaultCurrency } : {}),
+    ...(patch.subscriptionStatus !== undefined ? { subscription_status: patch.subscriptionStatus } : {}),
+  };
   // Keep auth metadata and the users_profile row in step.
-  await sb.auth.updateUser({
-    data: {
-      ...(patch.displayName !== undefined ? { display_name: patch.displayName } : {}),
-      ...(patch.defaultCurrency !== undefined ? { default_currency: patch.defaultCurrency } : {}),
-    },
-  });
+  await sb.auth.updateUser({ data: meta });
   const { data } = await sb.auth.getUser();
   if (data.user) {
     await sb.from("users_profile").update({
       ...(patch.displayName !== undefined ? { display_name: patch.displayName } : {}),
       ...(patch.defaultCurrency !== undefined ? { default_currency: patch.defaultCurrency } : {}),
+      ...(patch.subscriptionStatus !== undefined ? { subscription_status: patch.subscriptionStatus } : {}),
     }).eq("id", data.user.id);
   }
 }

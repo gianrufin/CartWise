@@ -83,6 +83,11 @@ interface StoreApi {
   // and returns the new trip id. Carried-over items are kept on the list.
   completeTrip: (listId: string, paymentMethod: PaymentMethod) => string;
 
+  // Duplicate a list (items reset to pending, actual prices cleared). Returns new id.
+  duplicateList: (listId: string) => string | null;
+  // Archive / restore a list (status), keeping its data.
+  setListArchived: (listId: string, archived: boolean) => void;
+
   // Re-pull cloud data (e.g. after joining a shared list). No-op in local mode.
   refresh: () => void;
 }
@@ -337,6 +342,44 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     return tripId;
   }, []);
 
+  const duplicateList = useCallback((listId: string) => {
+    const newId = uid("list");
+    let created: string | null = null;
+    setState((s) => {
+      const src = s.lists.find((l) => l.id === listId);
+      if (!src) return s;
+      created = newId;
+      const copy: ShoppingList = {
+        id: newId,
+        name: `${src.name} (copy)`,
+        description: src.description,
+        currency: src.currency,
+        budgetAmount: src.budgetAmount,
+        status: "active",
+        createdAt: new Date().toISOString(),
+        items: src.items.map((it) => ({
+          ...it,
+          id: uid("item"),
+          listId: newId,
+          status: "pending" as ItemStatus,
+          actualUnitPrice: undefined,
+          actualTotalPrice: undefined,
+        })),
+      };
+      return { ...s, lists: [copy, ...s.lists] };
+    });
+    return created;
+  }, []);
+
+  const setListArchived = useCallback((listId: string, archived: boolean) => {
+    setState((s) => ({
+      ...s,
+      lists: s.lists.map((l) =>
+        l.id === listId ? { ...l, status: archived ? "archived" : "active" } : l
+      ),
+    }));
+  }, []);
+
   const refresh = useCallback(() => setRefreshNonce((n) => n + 1), []);
 
   const value = useMemo<StoreApi>(() => {
@@ -363,6 +406,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       updateItem,
       deleteItem,
       completeTrip,
+      duplicateList,
+      setListArchived,
       refresh,
     };
   }, [
@@ -376,6 +421,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     updateItem,
     deleteItem,
     completeTrip,
+    duplicateList,
+    setListArchived,
     refresh,
   ]);
 

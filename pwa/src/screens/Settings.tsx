@@ -4,6 +4,7 @@ import { AuthModal } from "../components/AuthModal";
 import { currencies } from "../data/constants";
 import { useAuth } from "../data/auth";
 import { isCloudConfigured } from "../data/config";
+import { isPremium } from "../data/entitlements";
 
 export function Settings() {
   const navigate = useNavigate();
@@ -81,21 +82,20 @@ export function Settings() {
         )}
       </div>
 
-      {/* Static placeholders for later phases */}
-      <div className="card" style={{ padding: 0 }}>
-        {[
-          ["Households and groups", "Available with an account (Phase 6)"],
-          ["Privacy", "Private lists, data visibility (Phase 5)"],
-          ["Data export", "Premium feature (Phase 9)"],
-        ].map(([title, sub], i, arr) => (
-          <div key={title}>
-            <div style={{ padding: "var(--space-lg)", minHeight: "var(--touch-target)" }}>
-              <div>{title}</div>
-              <div className="muted">{sub}</div>
+      {/* Subscription */}
+      <div
+        className="card clickable"
+        onClick={() => navigate("/subscription")}
+      >
+        <div className="row">
+          <div>
+            <div className="caption">Subscription</div>
+            <div className="amount" style={{ marginTop: 4 }}>
+              {isPremium(user) ? "Premium" : "Free"}
             </div>
-            {i < arr.length - 1 && <hr className="divider" />}
           </div>
-        ))}
+          <span className="badge shared">{isPremium(user) ? "Manage" : "Upgrade"}</span>
+        </div>
       </div>
 
       <p className="caption">

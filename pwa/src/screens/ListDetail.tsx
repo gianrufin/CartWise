@@ -16,7 +16,7 @@ export function ListDetail() {
   const { listId } = useParams();
   const navigate = useNavigate();
   const { isGuest, user } = useAuth();
-  const { getList, updateList, deleteList } = useStore();
+  const { getList, updateList, deleteList, duplicateList, setListArchived } = useStore();
   const list = getList(listId);
   const [editing, setEditing] = useState(false);
   const [shareBlocked, setShareBlocked] = useState(false);
@@ -199,6 +199,16 @@ export function ListDetail() {
           }}
           onDelete={() => {
             deleteList(list.id);
+            navigate("/lists");
+          }}
+          onDuplicate={() => {
+            const id = duplicateList(list.id);
+            setEditing(false);
+            if (id) navigate(`/list/${id}`);
+          }}
+          onArchive={() => {
+            setListArchived(list.id, list.status !== "archived");
+            setEditing(false);
             navigate("/lists");
           }}
         />

@@ -15,9 +15,19 @@ interface Props {
     description?: string;
   }) => void;
   onDelete?: () => void;
+  onDuplicate?: () => void;
+  onArchive?: () => void;
 }
 
-export function ListFormModal({ list, defaultCurrency = "PHP", onClose, onSubmit, onDelete }: Props) {
+export function ListFormModal({
+  list,
+  defaultCurrency = "PHP",
+  onClose,
+  onSubmit,
+  onDelete,
+  onDuplicate,
+  onArchive,
+}: Props) {
   const [name, setName] = useState(list?.name ?? "");
   const [currency, setCurrency] = useState(list?.currency ?? defaultCurrency);
   const [budget, setBudget] = useState(
@@ -99,6 +109,20 @@ export function ListFormModal({ list, defaultCurrency = "PHP", onClose, onSubmit
         <button className="btn btn-primary btn-block" disabled={!canSave} onClick={submit}>
           {list ? "Save changes" : "Create list"}
         </button>
+        {list && (onDuplicate || onArchive) && (
+          <div className="field-row">
+            {onDuplicate && (
+              <button className="btn btn-outline" style={{ flex: 1 }} onClick={onDuplicate}>
+                Duplicate
+              </button>
+            )}
+            {onArchive && (
+              <button className="btn btn-outline" style={{ flex: 1 }} onClick={onArchive}>
+                {list.status === "archived" ? "Restore" : "Archive"}
+              </button>
+            )}
+          </div>
+        )}
         {list && onDelete && (
           <button className="btn btn-text btn-block danger-text" onClick={onDelete}>
             Delete list
