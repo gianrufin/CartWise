@@ -15,7 +15,9 @@ export type IconName =
   | "close"
   | "clipboard-list"
   | "lock"
-  | "users";
+  | "users"
+  | "chevron-down"
+  | "chevron-up";
 
 const PATHS: Record<IconName, JSX.Element> = {
   home: (
@@ -86,6 +88,16 @@ const PATHS: Record<IconName, JSX.Element> = {
       <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
       <circle cx="9" cy="7" r="3.5" />
       <path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" />
+    </>
+  ),
+  "chevron-down": (
+    <>
+      <path d="M6 9l6 6 6-6" />
+    </>
+  ),
+  "chevron-up": (
+    <>
+      <path d="M6 15l6-6 6 6" />
     </>
   ),
 };

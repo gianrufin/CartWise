@@ -28,6 +28,7 @@ export function Tally() {
   const [amount, setAmount] = useState("");
   const [name, setName] = useState("");
   const [editingBudget, setEditingBudget] = useState(false);
+  const [padOpen, setPadOpen] = useState(true);
 
   const value = parseFloat(amount);
   const canAdd = !Number.isNaN(value) && value > 0;
@@ -133,35 +134,53 @@ export function Tally() {
       </div>
 
       <div className="tally-pad">
-        <div className="pad-entry-row">
-          <div className="pad-amount" aria-label="Current price">
-            <span className="cur">₱</span>
-            <span className={amount ? "" : "ph"}>{amount || "0"}</span>
+        <button
+          className="pad-handle"
+          onClick={() => setPadOpen((o) => !o)}
+          aria-expanded={padOpen}
+          aria-label={padOpen ? "Hide keypad" : "Show keypad"}
+        >
+          <Icon name={padOpen ? "chevron-down" : "chevron-up"} size={18} />
+          {padOpen ? "Hide keypad" : "Show keypad"}
+        </button>
+        <div className={`pad-body ${padOpen ? "" : "collapsed"}`}>
+          <div className="pad-inner">
+            <div className="pad-entry-row">
+              <div className="pad-amount" aria-label="Current price">
+                <span className="cur">₱</span>
+                <span className={amount ? "" : "ph"}>{amount || "0"}</span>
+              </div>
+              <button className="pad-add" onClick={submit} disabled={!canAdd} aria-label="Add price">
+                <Icon name="plus" size={26} strokeWidth={2.2} />
+              </button>
+            </div>
+            <input
+              className="pad-name"
+              placeholder="Item name (optional)"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && submit()}
+              aria-label="Item name (optional)"
+            />
+            <div className="keypad">
+              {KEYS.map((k) => (
+                <button
+                  key={k}
+                  className="key"
+                  onClick={() => press(k)}
+                  aria-label={k === "back" ? "Backspace" : k}
+                >
+                  {k === "back" ? <Icon name="arrow-left" size={20} /> : k}
+                </button>
+              ))}
+            </div>
+            {entries.length > 0 && (
+              <button className="link-btn danger" onClick={clear}>
+                Clear all
+              </button>
+            )}
           </div>
-          <button className="pad-add" onClick={submit} disabled={!canAdd} aria-label="Add price">
-            <Icon name="plus" size={26} strokeWidth={2.2} />
-          </button>
         </div>
-        <input
-          className="pad-name"
-          placeholder="Item name (optional)"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && submit()}
-          aria-label="Item name (optional)"
-        />
-        <div className="keypad">
-          {KEYS.map((k) => (
-            <button key={k} className="key" onClick={() => press(k)} aria-label={k === "back" ? "Backspace" : k}>
-              {k === "back" ? <Icon name="arrow-left" size={20} /> : k}
-            </button>
-          ))}
-        </div>
-        {entries.length > 0 && (
-          <button className="link-btn danger" onClick={clear}>
-            Clear all
-          </button>
-        )}
       </div>
 
       {editingBudget && (
