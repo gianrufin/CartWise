@@ -1,10 +1,13 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Icon } from "../components/Icon";
 import { TopBar } from "../components/TopBar";
 import { defaultCategories, defaultStores } from "../data/constants";
+import { getLastPrice } from "../data/priceHistory";
 import { useStore } from "../data/store";
 import { derivePrices, type ItemPriority } from "../data/types";
+import { formatCurrency } from "../utils/currency";
+import { formatDate } from "../utils/date";
 
 const priorities: { value: ItemPriority; label: string }[] = [
   { value: "essential", label: "Essential" },
@@ -56,6 +59,12 @@ export function AddItem() {
   const tp = totalPrice.trim() === "" ? undefined : parseFloat(totalPrice);
   const derived = derivePrices({ quantity: qty, unitPrice: up, totalPrice: tp });
   const canSave = name.trim().length > 0;
+
+  // Phase 12: suggest the last price paid for this item (optional helper).
+  const suggestion = useMemo(
+    () => (name.trim() ? getLastPrice(name, store ?? undefined) : null),
+    [name, store]
+  );
 
   const save = () => {
     if (!canSave) return;
@@ -148,6 +157,21 @@ export function AddItem() {
             />
           </div>
         </div>
+
+        {suggestion && totalPrice.trim() === "" && (
+          <button
+            type="button"
+            className="chip selected"
+            onClick={() => {
+              setTotalPrice(String(suggestion.totalPrice));
+              if (suggestion.unitPrice != null) setUnitPrice(String(suggestion.unitPrice));
+            }}
+          >
+            Last time: {formatCurrency(suggestion.totalPrice, list.currency, true)}
+            {suggestion.store ? ` @ ${suggestion.store}` : ""} ·{" "}
+            {formatDate(suggestion.at)} · tap to use
+          </button>
+        )}
 
         {derived.mismatch && (
           <div className="warn-banner">

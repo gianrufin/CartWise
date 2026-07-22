@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { TopBar } from "../components/TopBar";
+import { recordPurchase } from "../data/priceHistory";
 import { useStore } from "../data/store";
 import type { ItemStatus, PaymentMethod } from "../data/types";
 import { actualTotal, PAYMENT_LABELS, unresolvedCount } from "../data/types";
@@ -113,6 +114,7 @@ export function EndOfTrip() {
             <button
               className="btn btn-primary btn-block"
               onClick={() => {
+                recordPurchase(list); // Phase 12: remember prices paid
                 const tripId = completeTrip(list.id, payment);
                 navigate(`/trip/${tripId}`, { replace: true });
               }}
