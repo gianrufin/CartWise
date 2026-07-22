@@ -1,8 +1,8 @@
-// CartWise service worker — Phase 0: minimal app-shell cache so the PWA is
-// installable and loads offline. Real offline data sync arrives in Phase 1
-// (IndexedDB) and Phase 3 (cloud sync).
-const CACHE_NAME = "cartwise-shell-v1";
-const SHELL_ASSETS = ["/", "/manifest.webmanifest", "/icons/icon.svg"];
+// CartWise service worker — minimal app-shell cache so the PWA is installable
+// and loads offline. Paths are RELATIVE to the SW's own location, so it works
+// whether the app is served from "/" or a subpath like "/CartWise/".
+const CACHE_NAME = "cartwise-shell-v2";
+const SHELL_ASSETS = ["./", "./index.html", "./manifest.webmanifest"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
@@ -23,18 +23,25 @@ self.addEventListener("activate", (event) => {
 });
 
 self.addEventListener("fetch", (event) => {
-  if (event.request.method !== "GET") return;
+  const req = event.request;
+  if (req.method !== "GET") return;
+
+  // App navigations: network-first, fall back to the cached shell (offline /
+  // client-side routes). Everything else: network, then cache.
+  if (req.mode === "navigate") {
+    event.respondWith(
+      fetch(req).catch(() => caches.match("./index.html", { ignoreSearch: true }))
+    );
+    return;
+  }
+
   event.respondWith(
-    fetch(event.request)
+    fetch(req)
       .then((response) => {
         const copy = response.clone();
-        caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
+        caches.open(CACHE_NAME).then((cache) => cache.put(req, copy));
         return response;
       })
-      .catch(() =>
-        caches
-          .match(event.request)
-          .then((cached) => cached ?? caches.match("/"))
-      )
+      .catch(() => caches.match(req))
   );
 });
