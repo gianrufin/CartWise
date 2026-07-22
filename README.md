@@ -92,10 +92,17 @@ build plan in [`docs/BLUEPRINT.md`](docs/BLUEPRINT.md):
 - ✅ **Phase 9 (export):** premium CSV export of trips (unit-tested builder).
 - ✅ **Phase 12 (price history):** records prices paid, suggests last price when
   adding an item (local cache). Verified in-browser.
-- 🔨 **Phase 10 (item requests)** & **Phase 11 (photos):** built; need
-  migration `0004_requests_photos.sql` applied (request-only role + requests
-  table + private photo bucket). Verification pending migration.
+- ✅ **Phase 10 (item requests):** request-only role, requests table, owner
+  approve/decline. **Verified live** (request→approve, direct-add blocked,
+  outsider isolation).
+- ✅ **Phase 11 (photos):** premium compressed item photos in a private,
+  membership-scoped storage bucket. **Verified live** (upload + signed URL,
+  outsider blocked by storage RLS).
 - ⬜ Phase 5 hardening (optional): column-level spending enforcement via a view
+- ⬜ Later (optional): households/groups, durable cloud price history
+
+All phases (0–12) are implemented for the **PWA** and deployed to
+https://gianrufin.github.io/CartWise/ (Android stays at its Phase 0 scaffold).
 
 > Scope note: development is **web (PWA) only** going forward — the Android
 > module stays at its Phase 0 scaffold.
