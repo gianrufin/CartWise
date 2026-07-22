@@ -76,8 +76,18 @@ build plan in [`docs/BLUEPRINT.md`](docs/BLUEPRINT.md):
   reload, plus per-item delta sync so simultaneous editors don't clobber each
   other. **Verified live**: a subscribed collaborator receives an owner's
   INSERT event end-to-end.
-- ⬜ Phase 1–4 (Android): port the workflow onto Room + Supabase
-- ⬜ Phase 5: Permissions and Privacy (private lists, spending visibility)
+- ✅ **Phase 5 (permissions & privacy):** explicit private vs shared lists
+  (DB trigger keeps `visibility` in step with membership), a Private/Shared
+  badge, and a per-collaborator "can view spending" permission that hides
+  actual prices/totals in the UI. **Verified live**: private default,
+  non-member isolation, join→shared / remove→private transitions, and the
+  spending flag round-trip.
+- ⬜ Phase 5 hardening (optional): column-level spending enforcement via a
+  security-barrier view (UI-gated today)
+- ⬜ Phase 6: Multiple lists, stores, and groups
+
+> Scope note: development is **web (PWA) only** going forward — the Android
+> module stays at its Phase 0 scaffold.
 
 ## Running the PWA
 
